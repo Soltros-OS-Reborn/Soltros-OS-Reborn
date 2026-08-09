@@ -6,7 +6,7 @@
     ],
     "transports": {
         "docker": {
-            "ghcr.io/soltros/soltros-os": [
+            "ghcr.io/soltros-os-reborn/soltros-os-reborn": [
                 {
                     "type": "sigstoreSigned",
                     "keyPath": "/etc/pki/containers/soltros.pub",

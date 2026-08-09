@@ -1,6 +1,12 @@
-# SoltrOS - Desktop Edition
+# SoltrOS Reborn - Desktop Edition
 
-![Soltros OS Screenshot](https://github.com/soltros/Soltros-OS/blob/main/screenshots/Screenshot%20From%202025-07-03%2004-33-37.png?raw=true)
+![SoltrOS Screenshot](https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn/blob/main/screenshots/Screenshot%20From%202025-07-03%2004-33-37.png?raw=true)
+
+> SoltrOS Reborn 是已停更 SoltrOS 的接续版本。本仓库当前以原版 SoltrOS 内容作为基线，保留其 Fedora Bootc、KDE Plasma、游戏优化、MacBook 支持和开发工具，并在此基础上持续更新、优化和增强。
+
+项目仓库：[Soltros-OS-Reborn/Soltros-OS-Reborn](https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn)
+
+当前容器镜像：`ghcr.io/soltros-os-reborn/soltros-os-reborn:latest`
 
 A gaming-optimized immutable Linux distribution based on Fedora Bootc's base image, featuring MacBook hardware support, gaming enhancements, CachyOS kernel performance, the KDE Plasma desktop environment, and developer-friendly tools.
 
@@ -8,7 +14,7 @@ A gaming-optimized immutable Linux distribution based on Fedora Bootc's base ima
 
 If you are using an RPM-OSTree based system like Fedora Silverblue, Bazzite, Bluefin, etc., you can use ``bootc`` to quickly swap to it.
 ```bash
-sudo bootc switch ghcr.io/soltros/soltros-os:latest
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
 sudo systemctl reboot
 ```
 
@@ -18,12 +24,12 @@ There has been an issue with policy.json not being generated correctly, resultin
 ### 1. Download the public key
 ```
 sudo mkdir -p /etc/pki/containers
-sudo curl -L https://github.com/soltros/Soltros-OS/raw/main/soltros.pub -o /etc/pki/containers/soltros.pub
+sudo curl -L https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn/raw/main/soltros.pub -o /etc/pki/containers/soltros.pub
 ```
 ### 2. Download the secure policy
 ```
 sudo mkdir -p /etc/containers
-sudo curl -L https://github.com/soltros/Soltros-OS/raw/main/resources/policy.json -o /etc/containers/policy.json
+sudo curl -L https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn/raw/main/resources/policy.json -o /etc/containers/policy.json
 ```
 ### 3. Verify permissions
 ```
@@ -99,7 +105,7 @@ Access to any Linux distribution's packages via containerized environments - all
 
 #### Method 1: Rebase from existing Fedora Atomic
 ```bash
-sudo bootc switch ghcr.io/soltros/soltros-os:latest
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
 ```
 
 #### Method 2: Fresh Installation
@@ -207,7 +213,7 @@ podman run -it soltros-os
 ```
 
 ## Server Image
-The SoltrOS Server Edition is very much a work in progress. To install, simply set up Silverblue, and bootc swap to it: https://github.com/soltros/soltros-os-server
+The SoltrOS Server Edition is still a work in progress. Server work will be tracked in this repository as the Reborn project develops.
 
 ## 🤝 Contributing
 
@@ -231,9 +237,9 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 ## 🆘 Support
 
-- **Issues**: [GitHub Issues](https://github.com/soltros/soltros-os/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/soltros/soltros-os/discussions)
+- **Issues**: [GitHub Issues](https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn/discussions)
 
 ---
 
-**SoltrOS** - Gaming meets productivity in an immutable, secure, and developer-friendly Linux distribution.
+**SoltrOS Reborn** - Gaming meets productivity in an immutable, secure, and developer-friendly Linux distribution.

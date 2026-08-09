@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE="ghcr.io/soltros/soltros-os:latest"
+IMAGE="ghcr.io/soltros-os-reborn/soltros-os-reborn:latest"
 
 echo "=== SoltrOS Secure Installer ==="
 

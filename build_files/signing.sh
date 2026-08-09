@@ -1,15 +1,16 @@
 #!/usr/bin/bash
 # SoltrOS: Container Signing Setup Script
 # Author: Derrik
-# Description: Configures sigstore signing trust for ghcr.io/soltros containers
+# Description: Configures sigstore signing trust for ghcr.io/soltros-os-reborn containers
 
 set ${SET_X:+-x} -eou pipefail
 
 # Variables
-NAMESPACE="soltros"
-PUBKEY="/etc/pki/containers/${NAMESPACE}.pub"
+NAMESPACE="soltros-os-reborn"
+IMAGE_NAME="soltros-os-reborn"
+PUBKEY="/etc/pki/containers/soltros.pub"
 POLICY="/etc/containers/policy.json"
-REGISTRY="ghcr.io/${NAMESPACE}"
+REGISTRY="ghcr.io/${NAMESPACE}/${IMAGE_NAME}"
 
 log() {
   echo "=== $* ==="

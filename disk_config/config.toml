@@ -5,7 +5,7 @@ contents = """
 ostreesetup --nogpg --osname=soltros --remote=soltros --url=file:///run/install/repo/container --ref=latest
 
 %post
-bootc switch --mutate-in-place --transport registry ghcr.io/soltros/soltros-os:latest
+bootc switch --mutate-in-place --transport registry ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
 %end
 """
 

@@ -105,7 +105,7 @@ soltros_install_flatpaks() {
     fi
     
     print_info "Downloading flatpak list and installing..."
-    if xargs -a <(curl --retry 3 -sL https://raw.githubusercontent.com/soltros/Soltros-OS/main/repo_files/flatpaks) flatpak --system -y install --reinstall; then
+    if xargs -a <(curl --retry 3 -sL https://raw.githubusercontent.com/Soltros-OS-Reborn/Soltros-OS-Reborn/main/repo_files/flatpaks) flatpak --system -y install --reinstall; then
         print_success "Flatpaks installation complete"
     else
         print_error "Failed to install flatpaks"

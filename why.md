@@ -44,7 +44,7 @@ SoltrOS implements what we call "Quintuple Package Management" - five complement
 #### Layer 1: RPM-OSTree (System Foundation)
 ```bash
 # Immutable base system with atomic updates
-sudo bootc switch ghcr.io/soltros/soltros-os:latest
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
 ```
 - Core system components
 - Kernel and drivers
@@ -185,7 +185,7 @@ SoltrOS implements comprehensive security measures:
 ```bash
 # Sigstore-based container signing
 cosign sign --yes --key env://COSIGN_PRIVATE_KEY \
-  ghcr.io/soltros/soltros-os:latest
+  ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
 ```
 
 - **Container Signing**: All images signed with cosign
@@ -301,7 +301,7 @@ SoltrOS uses a modern container-native installation approach:
 
 ```bash
 # Simple installation process
-sudo bootc switch ghcr.io/soltros/soltros-os:latest
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
 sudo systemctl reboot
 ```
 
@@ -309,7 +309,7 @@ sudo systemctl reboot
 
 ```bash
 # From any Fedora Atomic system (Silverblue, Kinoite, etc.)
-sudo bootc switch ghcr.io/soltros/soltros-os:latest
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
 sudo systemctl reboot
 
 # From traditional Fedora installations
@@ -339,7 +339,7 @@ For gamers seeking a Linux experience that just works, developers needing a stab
 
 ---
 
-*SoltrOS is open source software licensed under GPL v3. For more information, visit [github.com/soltros/soltros-os](https://github.com/soltros/soltros-os)*
+*SoltrOS Reborn is open source software licensed under GPL v3. For more information, visit [Soltros-OS-Reborn/Soltros-OS-Reborn](https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn)*
 
 ## Technical Appendix
 
@@ -350,7 +350,7 @@ For gamers seeking a Linux experience that just works, developers needing a stab
 podman build -t soltros-os .
 
 # Installation/switching to SoltrOS
-sudo bootc switch ghcr.io/soltros/soltros-os:latest
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
 
 # System management
 sh /usr/share/soltros/bin/helper.sh install-flatpaks    # Install applications

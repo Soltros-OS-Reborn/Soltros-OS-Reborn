@@ -2,11 +2,11 @@
 
 ![SoltrOS Screenshot](https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn/blob/main/screenshots/Screenshot%20From%202025-07-03%2004-33-37.png?raw=true)
 
-> SoltrOS Reborn 是已停更 SoltrOS 的接续版本。本仓库当前以原版 SoltrOS 内容作为基线，保留其 Fedora Bootc、KDE Plasma、游戏优化、MacBook 支持和开发工具，并在此基础上持续更新、优化和增强。
+> SoltrOS Reborn is the continuation of the discontinued SoltrOS project. This repository currently uses the original SoltrOS content as its baseline, retaining Fedora Bootc, KDE Plasma, gaming optimizations, MacBook support, and developer tools while continuing to improve and extend the system.
 
-项目仓库：[Soltros-OS-Reborn/Soltros-OS-Reborn](https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn)
+Project repository: [Soltros-OS-Reborn/Soltros-OS-Reborn](https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn)
 
-当前容器镜像：`ghcr.io/soltros-os-reborn/soltros-os-reborn:latest`
+Current container image: `ghcr.io/soltros-os-reborn/soltros-os-reborn:latest`
 
 A gaming-optimized immutable Linux distribution based on Fedora Bootc's base image, featuring MacBook hardware support, gaming enhancements, CachyOS kernel performance, the KDE Plasma desktop environment, and developer-friendly tools.
 

@@ -125,7 +125,7 @@ LAYERED_PACKAGES=(
     wireplumber
 )
 
-dnf5 install --setopt=install_weak_deps=False --nogpgcheck -y "${LAYERED_PACKAGES[@]}"
+dnf5 install --setopt=install_weak_deps=False --nogpgcheck --skip-unavailable -y "${LAYERED_PACKAGES[@]}"
 
 #Enabling various services
 systemctl enable pipewire.service || true

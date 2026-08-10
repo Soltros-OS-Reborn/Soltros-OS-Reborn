@@ -24,7 +24,7 @@ function echo_group() {
 log "Starting SoltrOS build process"
 
 # Base image for reference
-BASE_IMAGE="${BASE_IMAGE:ghcr.io/ublue-os/base-main}"
+BASE_IMAGE="${BASE_IMAGE:-ghcr.io/ublue-os/base-main}"
 
 log "Building for base image: $BASE_IMAGE"
 

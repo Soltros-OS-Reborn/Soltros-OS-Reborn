@@ -1,6 +1,6 @@
 # Set base image and tag
 ARG BASE_IMAGE=quay.io/fedora/fedora-kinoite
-ARG TAG_VERSION=latest
+ARG TAG_VERSION=44
 FROM ${BASE_IMAGE}:${TAG_VERSION}
 
 # Stage 1: context for scripts (not included in final image)
@@ -30,9 +30,9 @@ FROM ${BASE_IMAGE}:${TAG_VERSION} AS soltros
 # EXPLICIT DISTRO LABELS FOR BOOTC-IMAGE-BUILDER
 # These override any conflicting labels and force correct distro detection
 LABEL ostree.linux="fedora" \
-    org.opencontainers.image.version="42" \
+    org.opencontainers.image.version="44" \
     distro.name="fedora" \
-    distro.version="42"
+    distro.version="44"
 
 # Your custom branding (these won't interfere)
 LABEL org.opencontainers.image.title="SoltrOS Desktop" \
@@ -57,7 +57,8 @@ RUN dnf5 -y install dnf5-plugins
 RUN dnf5 -y config-manager setopt "*cachyos*".priority=1
 
 # Remove default kernel packages and install CachyOS kernel
-RUN dnf5 -y remove --no-autoremove kernel kernel-core kernel-modules kernel-modules-core kernel-modules-extra || true && \
+RUN printf 'layout=none\n' > /etc/kernel/install.conf && \
+    dnf5 -y remove --no-autoremove kernel kernel-core kernel-modules kernel-modules-core kernel-modules-extra || true && \
     echo "Installing CachyOS kernel..." && \
     if dnf5 -y install kernel-cachyos; then \
         echo "CachyOS kernel installed successfully"; \
@@ -80,6 +81,8 @@ RUN dnf5 -y remove --no-autoremove kernel kernel-core kernel-modules kernel-modu
     echo "Available kernel modules:" && \
     ls -la /usr/lib/modules/ || true
 
+RUN rm -f /etc/kernel/install.conf
+
 # Get rid of Plymouth
 RUN dnf5 remove plymouth* -y && \
     systemctl disable plymouth-start.service plymouth-read-write.service plymouth-quit.service plymouth-quit-wait.service plymouth-reboot.service plymouth-kexec.service plymouth-halt.service plymouth-poweroff.service 2>/dev/null || true && \
@@ -95,10 +98,14 @@ RUN dnf5 remove plymouth* -y && \
     dnf5 autoremove -y && \
     dnf5 clean all
 
-# Add Terra repo separately with better error handling
 RUN for i in {1..3}; do \
-    curl --retry 3 --retry-delay 5 -Lo /etc/yum.repos.d/terra.repo https://terra.fyralabs.com/terra.repo && \
-    break || sleep 10; \
+    if curl --fail --retry 3 --retry-delay 5 -Lo /tmp/terra.repo https://terra.fyralabs.com/terra.repo && \
+       grep -q '^\\[' /tmp/terra.repo; then \
+        install -m 0644 /tmp/terra.repo /etc/yum.repos.d/terra.repo; \
+        break; \
+    fi; \
+    rm -f /tmp/terra.repo; \
+    sleep 10; \
     done
 
 # Mount and run build script from ctx stage

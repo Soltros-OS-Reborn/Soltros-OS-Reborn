@@ -29,7 +29,6 @@ LAYERED_PACKAGES=(
     wireplumber
     just
     nebula
-    starship
     pipewire-alsa
     deja-dup
     playerctl
@@ -74,7 +73,6 @@ LAYERED_PACKAGES=(
     corectrl
     steam-devices
     # MacBook thermal management
-    mbpfan
     thermald
     
     # Essential CLI tools

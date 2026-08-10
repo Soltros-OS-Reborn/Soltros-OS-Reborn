@@ -3,6 +3,13 @@ ARG BASE_IMAGE=quay.io/fedora/fedora-kinoite
 ARG TAG_VERSION=44
 FROM ${BASE_IMAGE}:${TAG_VERSION}
 
+FROM ${BASE_IMAGE}:${TAG_VERSION} AS third-party-tools
+RUN dnf5 -y install gcc make
+COPY build_files/third-party-tools.sh /usr/local/bin/third-party-tools.sh
+RUN chmod 0755 /usr/local/bin/third-party-tools.sh && \
+    /usr/local/bin/third-party-tools.sh /out && \
+    dnf5 clean all
+
 # Stage 1: context for scripts (not included in final image)
 FROM ${BASE_IMAGE}:${TAG_VERSION} AS ctx
 COPY build_files/ /ctx/
@@ -42,6 +49,7 @@ LABEL org.opencontainers.image.title="SoltrOS Desktop" \
 # Copy static system configuration and branding
 COPY system_files/etc /etc
 COPY system_files/usr /usr
+COPY --from=third-party-tools /out/usr /usr
 COPY repo_files/ /etc/yum.repos.d/
 COPY resources/soltros-gdm.png /usr/share/pixmaps/fedora-gdm-logo.png
 COPY resources/soltros-watermark.png /usr/share/plymouth/themes/spinner/watermark.png
@@ -97,16 +105,6 @@ RUN dnf5 remove plymouth* -y && \
     dracut -f 2>/dev/null || true && \
     dnf5 autoremove -y && \
     dnf5 clean all
-
-RUN for i in {1..3}; do \
-    if curl --fail --retry 3 --retry-delay 5 -Lo /tmp/terra.repo https://terra.fyralabs.com/terra.repo && \
-       grep -q '^\\[' /tmp/terra.repo; then \
-        install -m 0644 /tmp/terra.repo /etc/yum.repos.d/terra.repo; \
-        break; \
-    fi; \
-    rm -f /tmp/terra.repo; \
-    sleep 10; \
-    done
 
 # Mount and run build script from ctx stage
 ARG BASE_IMAGE

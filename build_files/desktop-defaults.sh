@@ -13,3 +13,4 @@ systemctl enable podman.socket
 
 log "Enable thermal management services"
 systemctl enable thermald
+systemctl enable mbpfan.service

@@ -10,12 +10,15 @@ log() {
 
 log "Installing latest Waterfox browser"
 
-# Get the latest Waterfox version from GitHub API
-log "Fetching latest Waterfox version from GitHub API"
-LATEST_VERSION=$(curl -s https://api.github.com/repos/BrowserWorks/Waterfox/releases/latest | grep '"tag_name"' | cut -d '"' -f 4)
+log "Resolving latest Waterfox release"
+LATEST_RELEASE_URL=$(curl --fail --location --silent --show-error \
+    --output /dev/null \
+    --write-out '%{url_effective}' \
+    https://github.com/BrowserWorks/Waterfox/releases/latest)
+LATEST_VERSION="${LATEST_RELEASE_URL##*/}"
 
-if [ -z "$LATEST_VERSION" ]; then
-    log "Error: Failed to fetch latest version from GitHub API, falling back to manual installation"
+if [[ "$LATEST_RELEASE_URL" != */releases/tag/* || -z "$LATEST_VERSION" ]]; then
+    log "Error: Failed to resolve the latest Waterfox release"
     exit 1
 fi
 

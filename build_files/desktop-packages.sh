@@ -57,7 +57,7 @@ LAYERED_PACKAGES=(
     mesa-va-drivers
     mesa-vulkan-drivers
     fwupd
-    fwupd-plugin-flashrom
+    flashrom
     fwupd-plugin-modem-manager
     fwupd-plugin-uefi-capsule-data
     libvirtd
@@ -124,6 +124,13 @@ LAYERED_PACKAGES=(
 )
 
 dnf5 install --setopt=install_weak_deps=False --nogpgcheck --skip-unavailable -y "${LAYERED_PACKAGES[@]}"
+
+for required_package in fwupd flashrom; do
+    if ! rpm -q "${required_package}" >/dev/null; then
+        echo "Required package was not installed: ${required_package}" >&2
+        exit 1
+    fi
+done
 
 #Enabling various services
 systemctl enable pipewire.service || true

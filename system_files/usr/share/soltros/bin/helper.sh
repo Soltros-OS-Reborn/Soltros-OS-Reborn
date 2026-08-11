@@ -40,7 +40,7 @@ show_help() {
     cat << 'EOF'
 SoltrOS Setup Script
 
-Usage: helper [COMMAND]
+Usage: soltros [COMMAND]
 
 INSTALL COMMANDS:
   install                 Install all SoltrOS components
@@ -606,7 +606,7 @@ main() {
             ;;
         *)
             echo "Unknown command: $1"
-            echo "Run 'helper' for usage information"
+            echo "Run 'soltros help' for usage information"
             exit 1
             ;;
     esac

@@ -1,77 +1,10 @@
-#!/usr/bin/env bash
-# SoltrOS Message of the Day (MOTD)
+SoltrOS 1 (Electric Blue)
+Gaming-ready immutable Fedora desktop with CachyOS performance.
 
-# Colors
-CYAN='\033[0;36m'
-BLUE='\033[0;34m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-MAGENTA='\033[0;35m'
-RED='\033[0;31m'
-WHITE='\033[1;37m'
-GRAY='\033[0;37m'
-NC='\033[0m' # No Color
+Quick commands:
+  soltros install          Install the default application set
+  soltros install-gaming   Install gaming applications
+  soltros update           Update the system and applications
+  soltros help             Show all available commands
 
-# System information gathering
-KERNEL=$(uname -r | cut -d'-' -f1-2)
-UPTIME=$(uptime -p | sed 's/up //')
-LOAD=$(uptime | awk -F'load average:' '{print $2}' | sed 's/^ *//')
-MEMORY=$(free -h | awk '/^Mem:/ {print $3"/"$2}')
-
-# SoltrOS ASCII Art
-cat << 'EOF'
-   ███████╗ ██████╗ ██╗  ████████╗██████╗  ██████╗ ███████╗
-   ██╔════╝██╔═══██╗██║  ╚══██╔══╝██╔══██╗██╔═══██╗██╔════╝
-   ███████╗██║   ██║██║     ██║   ██████╔╝██║   ██║███████╗
-   ╚════██║██║   ██║██║     ██║   ██╔══██╗██║   ██║╚════██║
-   ███████║╚██████╔╝███████╗██║   ██║  ██║╚██████╔╝███████║
-   ╚══════╝ ╚═════╝ ╚══════╝╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚══════╝
-EOF
-
-echo -e "${CYAN}   ┌─────────────────────────────────────────────────────────────┐${NC}"
-echo -e "${CYAN}   │${WHITE}  Gaming-Ready Immutable Linux with CachyOS Performance     ${CYAN}│${NC}"
-echo -e "${CYAN}   └─────────────────────────────────────────────────────────────┘${NC}"
-echo ""
-
-# System Status
-echo -e "${BLUE}┌─[ System Status ]──────────────────────────────────────────────┐${NC}"
-echo -e "${BLUE}│${NC} ${GREEN}●${NC} Kernel:    ${YELLOW}${KERNEL}${NC}"
-echo -e "${BLUE}│${NC} ${GREEN}●${NC} Uptime:    ${YELLOW}${UPTIME}${NC}"
-echo -e "${BLUE}│${NC} ${GREEN}●${NC} Load:      ${YELLOW}${LOAD}${NC}"
-echo -e "${BLUE}│${NC} ${GREEN}●${NC} Memory:    ${YELLOW}${MEMORY}${NC}"
-echo -e "${BLUE}└────────────────────────────────────────────────────────────────┘${NC}"
-echo ""
-
-# Quick Commands
-echo -e "${MAGENTA}┌─[ Quick Commands ]─────────────────────────────────────────────┐${NC}"
-echo -e "${MAGENTA}│${NC} ${CYAN}soltros install${NC}     - Install essential applications"
-echo -e "${MAGENTA}│${NC} ${CYAN}soltros setup-gaming${NC} - Setup gaming environment"
-echo -e "${MAGENTA}│${NC} ${CYAN}soltros update${NC}      - Update system and applications"
-echo -e "${MAGENTA}│${NC} ${CYAN}soltros help${NC}        - Show all available commands"
-echo -e "${MAGENTA}└────────────────────────────────────────────────────────────────┘${NC}"
-echo ""
-
-# Tips section
-echo -e "${YELLOW}💡 ${WHITE}Tips:${NC}"
-echo -e "   • This is an immutable OS - use ${CYAN}rpm-ostree${NC} for system packages"
-echo -e "   • Install apps with ${CYAN}flatpak${NC} or in ${CYAN}distrobox${NC} containers"
-echo -e "   • MacBook optimizations are pre-configured for thermal management"
-echo ""
-
-# Fun facts rotation (shows different fact each time)
-FACTS=(
-    "CachyOS kernel provides up to 15% better gaming performance"
-    "kde desktop uses 40% less RAM than GNOME"
-    "SoltrOS includes pre-configured gaming optimizations"
-    "Immutable OS means your system never breaks from updates"
-    "Flatpak sandboxing keeps your applications secure"
-    "Thermal management is optimized for MacBook hardware"
-)
-
-RANDOM_FACT=${FACTS[$RANDOM % ${#FACTS[@]}]}
-echo -e "${GREEN}🚀 ${WHITE}Did you know?${NC} ${RANDOM_FACT}"
-echo ""
-
-# Welcome message
-echo -e "${WHITE}Welcome back to ${CYAN}SoltrOS${WHITE}! Ready to game? 🎮${NC}"
-echo ""
+Use rpm-ostree for system packages and Flatpak or Distrobox for applications.

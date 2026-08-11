@@ -4,7 +4,7 @@
 
 ## Executive Summary
 
-SoltrOS represents a paradigm shift in gaming-focused Linux distributions, combining the stability of immutable operating systems with the performance benefits of gaming-optimized kernels and the flexibility of modern package management. Built on Fedora Kinoite with the CachyOS kernel, SoltrOS delivers up to 15% better gaming performance while maintaining system integrity through immutable design principles.
+SoltrOS represents a paradigm shift in gaming-focused Linux distributions, combining the stability of immutable operating systems with the performance benefits of gaming-optimized kernels and the flexibility of modern package management. Built on Fedora 44 bootc bases with the CachyOS kernel, SoltrOS delivers the same system foundation through four independently assembled desktop images.
 
 Unlike traditional gaming distributions that sacrifice stability for performance, SoltrOS achieves both through architectural innovation: an immutable base layer paired with five complementary package management systems that provide unprecedented flexibility without compromising system reliability.
 
@@ -30,12 +30,25 @@ SoltrOS addresses these challenges through a multi-layered architecture that sep
 
 ### Immutable Foundation with Performance Optimization
 
-At its core, SoltrOS uses an immutable operating system architecture based on Fedora Kinoite, enhanced with the CachyOS kernel for gaming performance. This approach provides:
+At its core, SoltrOS uses an immutable operating system architecture based on Fedora bootc images, enhanced with the CachyOS kernel for gaming performance. This approach provides:
 
 - **Atomic Updates**: The entire system updates as a single unit, eliminating partial update failures
 - **Rollback Capability**: Any update can be instantly reversed if issues arise
 - **Reproducible Builds**: Every SoltrOS installation is bit-for-bit identical
 - **Performance Optimization**: CachyOS kernel provides up to 15% gaming performance improvements through advanced scheduling algorithms
+
+### Isolated Desktop Variants
+
+The desktop is selected at image build time rather than installed into a shared runtime image. `variants/desktop-variants.json` drives the CI matrix and the installer configuration:
+
+| Variant | Base | Login path |
+| --- | --- | --- |
+| KDE Plasma | Fedora Kinoite | Plasma Login Manager |
+| GNOME | Fedora Silverblue | GDM |
+| Niri + Dank Material Shell | Fedora bootc | greetd and DMS |
+| Niri + Noctalia | Fedora bootc | greetd and Noctalia |
+
+The common layers contain gaming, hardware, networking, shell, and developer functionality. Each variant layer owns its desktop packages, display manager, portals, session defaults, and `/etc/skel` configuration. This prevents conflicting display-manager activation and makes rollback a property of the complete selected image.
 
 ### The Five-Layer Package Management Strategy
 
@@ -44,7 +57,7 @@ SoltrOS implements what we call "Quintuple Package Management" - five complement
 #### Layer 1: RPM-OSTree (System Foundation)
 ```bash
 # Immutable base system with atomic updates
-sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os:latest
 ```
 - Core system components
 - Kernel and drivers
@@ -163,17 +176,19 @@ SoltrOS uses a sophisticated multi-stage build process:
 
 ```dockerfile
 # Multi-stage build for efficiency
-FROM fedora-kinoite AS ctx
+ARG BASE_IMAGE=quay.io/fedora/fedora-kinoite
+FROM ${BASE_IMAGE}:44 AS ctx
 COPY build_files/ /ctx/
+COPY desktop_files/ /ctx/desktop-files/
 
-FROM fedora-kinoite AS soltros
+FROM ${BASE_IMAGE}:44 AS soltros
 RUN --mount=type=bind,from=ctx,source=/ctx,target=/ctx \
-    bash /ctx/build.sh
+    DESKTOP_VARIANT=$DESKTOP_VARIANT bash /ctx/build.sh
 ```
 
 #### Build Pipeline Components
 1. **Kernel Integration**: CachyOS kernel installation with fallbacks
-2. **Desktop Environment**: KDE Plasma with optimizations
+2. **Desktop Environment**: One of four isolated desktop variants with matching login and session configuration
 3. **Gaming Enhancements**: Performance tuning and hardware support
 4. **Security Configuration**: Container signing with cosign
 5. **System Cleanup**: Immutable OS compliance and optimization
@@ -185,7 +200,7 @@ SoltrOS implements comprehensive security measures:
 ```bash
 # Sigstore-based container signing
 cosign sign --yes --key env://COSIGN_PRIVATE_KEY \
-  ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
+  ghcr.io/soltros-os-reborn/soltros-os:latest
 ```
 
 - **Container Signing**: All images signed with cosign
@@ -301,7 +316,7 @@ SoltrOS uses a modern container-native installation approach:
 
 ```bash
 # Simple installation process
-sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os:latest
 sudo systemctl reboot
 ```
 
@@ -309,7 +324,7 @@ sudo systemctl reboot
 
 ```bash
 # From any Fedora Atomic system (Silverblue, Kinoite, etc.)
-sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os:latest
 sudo systemctl reboot
 
 # From traditional Fedora installations
@@ -350,7 +365,7 @@ For gamers seeking a Linux experience that just works, developers needing a stab
 podman build -t soltros-os .
 
 # Installation/switching to SoltrOS
-sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os:latest
 
 # System management
 sh /usr/share/soltros/bin/helper.sh install-flatpaks    # Install applications

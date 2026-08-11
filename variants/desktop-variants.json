@@ -1,0 +1,38 @@
+[
+  {
+    "id": "kde",
+    "display_name": "KDE Plasma",
+    "description": "A complete and highly configurable desktop with a familiar workflow.",
+    "base_image": "quay.io/fedora/fedora-kinoite",
+    "image_name": "soltros-os",
+    "session": "plasma",
+    "display_manager": "plasmalogin"
+  },
+  {
+    "id": "gnome",
+    "display_name": "GNOME",
+    "description": "A focused desktop with a consistent and streamlined workflow.",
+    "base_image": "quay.io/fedora/fedora-silverblue",
+    "image_name": "soltros-os-gnome",
+    "session": "gnome",
+    "display_manager": "gdm"
+  },
+  {
+    "id": "niri-dms",
+    "display_name": "Niri + Dank Material Shell",
+    "description": "A scrolling Wayland compositor with the integrated Dank Material Shell.",
+    "base_image": "quay.io/fedora/fedora-bootc",
+    "image_name": "soltros-os-niri-dms",
+    "session": "niri",
+    "display_manager": "greetd"
+  },
+  {
+    "id": "niri-noctalia",
+    "display_name": "Niri + Noctalia",
+    "description": "A scrolling Wayland compositor with the native Noctalia desktop shell.",
+    "base_image": "quay.io/fedora/fedora-bootc",
+    "image_name": "soltros-os-niri-noctalia",
+    "session": "niri",
+    "display_manager": "greetd"
+  }
+]

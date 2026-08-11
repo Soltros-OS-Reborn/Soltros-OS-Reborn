@@ -1,66 +1,60 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
 
-IMAGE="ghcr.io/soltros-os-reborn/soltros-os-reborn:latest"
+manifest="${SOLTROS_VARIANT_MANIFEST:-/usr/share/soltros/desktop-variants.json}"
+registry="${IMAGE_REGISTRY:-ghcr.io/soltros-os-reborn}"
+tag="${IMAGE_TAG:-latest}"
 
-echo "=== SoltrOS Secure Installer ==="
+registry="${registry,,}"
+registry="${registry%/}"
 
-read -rp "Enter target disk (e.g., /dev/sda or /dev/nvme0n1): " TARGET
-if [ ! -b "$TARGET" ]; then
-    echo "❌ Error: $TARGET is not a valid block device."
+if [[ ! -r "${manifest}" ]]; then
+    echo "Desktop variant manifest is not readable: ${manifest}" >&2
     exit 1
 fi
 
-echo "⚠️  WARNING: This will erase all data on $TARGET"
-read -rp "Are you sure you want to continue? (yes/[no]): " CONFIRM
-[[ "$CONFIRM" != "yes" ]] && { echo "Aborted."; exit 1; }
+mapfile -t variants < <(jq -r '.[] | [.id, .display_name, .image_name] | @tsv' "${manifest}")
+if [[ "${#variants[@]}" -ne 4 ]]; then
+    echo "Expected four desktop variants in ${manifest}" >&2
+    exit 1
+fi
 
-# Prompt for username and secure password
-read -rp "Enter desired username: " NEWUSER
-read -rsp "Enter password for $NEWUSER: " NEWPASS
-echo
-read -rsp "Confirm password: " CONFIRM_PASS
-echo
-[[ "$NEWPASS" != "$CONFIRM_PASS" ]] && { echo "❌ Passwords do not match."; exit 1; }
+printf '%s\n' 'SoltrOS Reborn desktop selection' ''
+for index in "${!variants[@]}"; do
+    IFS=$'\t' read -r variant display_name image_name <<<"${variants[${index}]}"
+    printf '  %d) %s (%s)\n' "$((index + 1))" "${display_name}" "${variant}"
+done
 
-# Generate password hash using SHA-512
-PASSHASH=$(openssl passwd -6 "$NEWPASS")
+while :; do
+    read -rp 'Select a desktop [1-4]: ' selection
+    if [[ "${selection}" =~ ^[1-4]$ ]]; then
+        break
+    fi
+    echo 'Enter a number from 1 to 4.'
+done
 
-# Create temporary systemd unit for user creation
-TMPDIR=$(mktemp -d)
-mkdir -p "$TMPDIR/install.d"
+IFS=$'\t' read -r variant display_name image_name <<<"${variants[$((selection - 1))]}"
+image="${registry}/${image_name}:${tag}"
 
-# Create install.d config
-cat > "$TMPDIR/install.d/99-create-user.conf" <<EOF
-[Install]
-AddFile=/etc/systemd/system/99-create-user.service:/etc/systemd/system/99-create-user.service
-EnableService=99-create-user.service
-EOF
+read -rp 'Enter the target disk (for example, /dev/sda): ' target
+if [[ ! -b "${target}" ]]; then
+    echo "Target is not a block device: ${target}" >&2
+    exit 1
+fi
 
-# Create secure systemd service
-cat > "$TMPDIR/install.d/99-create-user.service" <<EOF
-[Unit]
-Description=Create user $NEWUSER securely on first boot
-ConditionPathExists=!/home/$NEWUSER
+printf 'Desktop: %s\nImage: %s\nTarget: %s\n' "${display_name}" "${image}" "${target}"
+printf 'All data on %s will be erased.\n' "${target}"
+read -rp 'Type INSTALL to continue: ' confirmation
+if [[ "${confirmation}" != INSTALL ]]; then
+    echo 'Installation cancelled.'
+    exit 1
+fi
 
-[Service]
-Type=oneshot
-ExecStart=/usr/sbin/useradd -m -G wheel -s /bin/bash -p '$PASSHASH' $NEWUSER
-RemainAfterExit=yes
+sudo bootc install to-disk \
+    --wipe \
+    --source-imgref "docker://${image}" \
+    --target-imgref "${image}" \
+    "${target}"
 
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Run bootc install with injected files
-echo "🚀 Installing SoltrOS to $TARGET"
-sudo bootc install \
-    --image "$IMAGE" \
-    --target "$TARGET" \
-    --add-file "$TMPDIR/install.d/99-create-user.conf":/etc/bootc/install.d/99-create-user.conf \
-    --add-file "$TMPDIR/install.d/99-create-user.service":/etc/systemd/system/99-create-user.service
-
-# Clean up temp files
-rm -rf "$TMPDIR"
-
-echo "✅ Install complete! User '$NEWUSER' will be created securely on first boot."
+printf 'Installed the %s variant to %s.\n' "${variant}" "${target}"

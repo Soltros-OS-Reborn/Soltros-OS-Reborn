@@ -1,0 +1,42 @@
+include "soltros-shell.kdl"
+
+input {
+    keyboard {
+        xkb { }
+        numlock
+    }
+    touchpad {
+        tap
+        natural-scroll
+    }
+    focus-follows-mouse max-scroll-amount="0%"
+}
+
+layout {
+    gaps 12
+    center-focused-column "on-overflow"
+    default-column-width { proportion 0.5; }
+}
+
+hotkey-overlay {
+    skip-at-startup
+}
+
+binds {
+    Mod+T hotkey-overlay-title="Open Terminal" { spawn "alacritty"; }
+    Mod+E hotkey-overlay-title="Open File Manager" { spawn "nautilus"; }
+    Mod+Q repeat=false { close-window; }
+    Mod+O repeat=false { toggle-overview; }
+
+    Mod+H { focus-column-left; }
+    Mod+J { focus-window-down; }
+    Mod+K { focus-window-up; }
+    Mod+L { focus-column-right; }
+
+    Mod+Ctrl+H { move-column-left; }
+    Mod+Ctrl+J { move-window-down; }
+    Mod+Ctrl+K { move-window-up; }
+    Mod+Ctrl+L { move-column-right; }
+
+    Mod+Shift+E { quit; }
+}

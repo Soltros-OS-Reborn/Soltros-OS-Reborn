@@ -1,12 +1,39 @@
 {
     "default": [
         {
-            "type": "insecureAcceptAnything"
+            "type": "reject"
         }
     ],
     "transports": {
         "docker": {
-            "ghcr.io/soltros-os-reborn/soltros-os-reborn": [
+            "ghcr.io/soltros-os-reborn/soltros-os": [
+                {
+                    "type": "sigstoreSigned",
+                    "keyPath": "/etc/pki/containers/soltros.pub",
+                    "signedIdentity": {
+                        "type": "matchRepository"
+                    }
+                }
+            ],
+            "ghcr.io/soltros-os-reborn/soltros-os-gnome": [
+                {
+                    "type": "sigstoreSigned",
+                    "keyPath": "/etc/pki/containers/soltros.pub",
+                    "signedIdentity": {
+                        "type": "matchRepository"
+                    }
+                }
+            ],
+            "ghcr.io/soltros-os-reborn/soltros-os-niri-dms": [
+                {
+                    "type": "sigstoreSigned",
+                    "keyPath": "/etc/pki/containers/soltros.pub",
+                    "signedIdentity": {
+                        "type": "matchRepository"
+                    }
+                }
+            ],
+            "ghcr.io/soltros-os-reborn/soltros-os-niri-noctalia": [
                 {
                     "type": "sigstoreSigned",
                     "keyPath": "/etc/pki/containers/soltros.pub",

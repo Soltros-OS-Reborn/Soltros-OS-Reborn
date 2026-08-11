@@ -2,19 +2,30 @@
 
 ![SoltrOS Screenshot](https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn/blob/main/screenshots/Screenshot%20From%202025-07-03%2004-33-37.png?raw=true)
 
-> SoltrOS Reborn is the continuation of the discontinued SoltrOS project. This repository currently uses the original SoltrOS content as its baseline, retaining Fedora Bootc, KDE Plasma, gaming optimizations, MacBook support, and developer tools while continuing to improve and extend the system.
+> SoltrOS Reborn is the continuation of the discontinued SoltrOS project. It provides Fedora 44 bootc images with the same gaming, MacBook, and developer foundations and four independently built desktop variants.
 
 Project repository: [Soltros-OS-Reborn/Soltros-OS-Reborn](https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn)
 
-Current container image: `ghcr.io/soltros-os-reborn/soltros-os-reborn:latest`
+The default container image is `ghcr.io/soltros-os-reborn/soltros-os:latest`.
 
-A gaming-optimized immutable Linux distribution based on Fedora Bootc's base image, featuring MacBook hardware support, gaming enhancements, CachyOS kernel performance, the KDE Plasma desktop environment, and developer-friendly tools.
+A gaming-optimized immutable Linux distribution based on Fedora bootc images, featuring MacBook hardware support, gaming enhancements, CachyOS kernel performance, and developer-friendly tools. Each desktop variant is built as a separate image so the immutable system never carries a second display manager or desktop stack.
+
+## Desktop Variants
+
+| Variant | OCI image | Session and login path |
+| --- | --- | --- |
+| KDE Plasma | `ghcr.io/soltros-os-reborn/soltros-os:latest` | Plasma Login Manager |
+| GNOME | `ghcr.io/soltros-os-reborn/soltros-os-gnome:latest` | GDM |
+| Niri + Dank Material Shell | `ghcr.io/soltros-os-reborn/soltros-os-niri-dms:latest` | greetd and DMS |
+| Niri + Noctalia | `ghcr.io/soltros-os-reborn/soltros-os-niri-noctalia:latest` | greetd and Noctalia |
+
+The source of truth for these variants is [`variants/desktop-variants.json`](variants/desktop-variants.json). The CI matrix builds and publishes every entry.
 
 *Inspired by [VenOS](https://github.com/Venefilyn/veneos) - bringing together the best of gaming and productivity.*
 
 If you are using an RPM-OSTree based system like Fedora Silverblue, Bazzite, Bluefin, etc., you can use ``bootc`` to quickly swap to it.
 ```bash
-sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os:latest
 sudo systemctl reboot
 ```
 
@@ -68,8 +79,8 @@ sudo chmod 644 /etc/containers/policy.json
 - **Container signing** with cosign for security
 
 ### 🎨 Desktop Environment
-- **kde Desktop** with dark theme by default for lightweight performance
-- **LightDM** display manager for fast boot times
+- Four isolated desktop images: KDE Plasma, GNOME, Niri + Dank Material Shell, and Niri + Noctalia
+- A variant-specific display manager: Plasma Login Manager, GDM, or greetd
 - **Papirus icon theme** for a modern look
 - **Custom branding** and SoltrOS identity
 - **Optimized settings** for productivity and aesthetics
@@ -105,11 +116,11 @@ Access to any Linux distribution's packages via containerized environments - all
 
 #### Method 1: Rebase from existing Fedora Atomic
 ```bash
-sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os:latest
 ```
 
 #### Method 2: Fresh Installation
-Use the provided ISO configuration to install directly.
+Download the `soltros-live-installer` artifact from the GitHub Actions build, boot it, and select a desktop in the installer before choosing the target disk and user. The same ISO can install all four variants and requires network access to fetch the selected OCI image.
 
 ### First Boot Setup
 
@@ -204,13 +215,21 @@ Pre-configured settings include:
 
 ### Build locally
 ```bash
-podman build -t soltros-os .
+podman build --build-arg DESKTOP_VARIANT=kde -t soltros-os .
+podman build --build-arg BASE_IMAGE=quay.io/fedora/fedora-silverblue \
+  --build-arg DESKTOP_VARIANT=gnome -t soltros-os-gnome .
+podman build --build-arg BASE_IMAGE=quay.io/fedora/fedora-bootc \
+  --build-arg DESKTOP_VARIANT=niri-dms -t soltros-os-niri-dms .
+podman build --build-arg BASE_IMAGE=quay.io/fedora/fedora-bootc \
+  --build-arg DESKTOP_VARIANT=niri-noctalia -t soltros-os-niri-noctalia .
 ```
 
-### Run locally
+### Build the LiveISO
 ```bash
-podman run -it soltros-os
+disk_config/build-live-iso.sh output/liveiso
 ```
+
+The ISO is an Anaconda boot installer. Its `%pre` selector supports an optional `soltros.variant=<id>` kernel argument for automated VM testing, while normal users see the four desktop choices before installation.
 
 ## Server Image
 The SoltrOS Server Edition is still a work in progress. Server work will be tracked in this repository as the Reborn project develops.

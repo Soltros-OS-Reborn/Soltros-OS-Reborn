@@ -1,15 +1,81 @@
-# bootc-image-builder config.toml
-
 [customizations.installer.kickstart]
 contents = """
-%post
-bootc switch --mutate-in-place --transport registry ghcr.io/soltros-os-reborn/soltros-os-reborn:latest
+graphical
+network --bootproto=dhcp --device=link --activate
+
+%pre
+selector_tty=/dev/tty6
+selected_variant=
+
+for argument in $(cat /proc/cmdline); do
+    case "$argument" in
+        soltros.variant=*) selected_variant=${argument#soltros.variant=} ;;
+    esac
+done
+
+case "$selected_variant" in
+    kde|gnome|niri-dms|niri-noctalia) ;;
+    *)
+        if [ -r "$selector_tty" ] && [ -w "$selector_tty" ]; then
+            exec < "$selector_tty" > "$selector_tty" 2>&1
+            chvt 6 || true
+        fi
+
+        clear
+        printf '%s\n' \
+            'SoltrOS Reborn desktop selection' \
+            '' \
+            '  1) KDE Plasma' \
+            '  2) GNOME' \
+            '  3) Niri + Dank Material Shell' \
+            '  4) Niri + Noctalia' \
+            ''
+
+        while :; do
+            printf 'Select a desktop [1-4]: '
+            read -r selection
+            case "$selection" in
+                1) selected_variant=kde; break ;;
+                2) selected_variant=gnome; break ;;
+                3) selected_variant=niri-dms; break ;;
+                4) selected_variant=niri-noctalia; break ;;
+                *) printf 'Enter a number from 1 to 4.\n' ;;
+            esac
+        done
+        ;;
+esac
+
+case "$selected_variant" in
+    kde) image='@@IMAGE_KDE@@' ;;
+    gnome) image='@@IMAGE_GNOME@@' ;;
+    niri-dms) image='@@IMAGE_NIRI_DMS@@' ;;
+    niri-noctalia) image='@@IMAGE_NIRI_NOCTALIA@@' ;;
+esac
+
+printf 'ostreecontainer --url %s\n' "$image" > /tmp/soltros-source.ks
+printf '%s\n' "$selected_variant" > /tmp/soltros-selected-variant
+printf 'Installing the %s desktop from %s\n' "$selected_variant" "$image"
+sleep 2
+chvt 1 || true
+%end
+
+%include /tmp/soltros-source.ks
+
+%post --nochroot
+target_root=/mnt/sysroot
+if [ ! -d "$target_root" ]; then
+    target_root=/mnt/sysimage
+fi
+install -D -m 0644 /tmp/soltros-selected-variant \
+    "$target_root/var/lib/soltros/installer-selected-variant"
 %end
 """
 
 [customizations.installer.modules]
 enable = [
+  "org.fedoraproject.Anaconda.Modules.Localization",
   "org.fedoraproject.Anaconda.Modules.Storage",
+  "org.fedoraproject.Anaconda.Modules.Runtime",
   "org.fedoraproject.Anaconda.Modules.Network",
   "org.fedoraproject.Anaconda.Modules.Security",
   "org.fedoraproject.Anaconda.Modules.Services",

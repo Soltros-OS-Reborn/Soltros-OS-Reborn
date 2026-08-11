@@ -1,7 +1,7 @@
 # Set base image and tag
 ARG BASE_IMAGE=quay.io/fedora/fedora-kinoite
 ARG TAG_VERSION=44
-FROM ${BASE_IMAGE}:${TAG_VERSION}
+ARG DESKTOP_VARIANT=kde
 
 FROM ${BASE_IMAGE}:${TAG_VERSION} AS third-party-tools
 RUN dnf5 -y install gcc make
@@ -13,6 +13,9 @@ RUN chmod 0755 /usr/local/bin/third-party-tools.sh && \
 # Stage 1: context for scripts (not included in final image)
 FROM ${BASE_IMAGE}:${TAG_VERSION} AS ctx
 COPY build_files/ /ctx/
+COPY desktop_files/ /ctx/desktop-files/
+COPY resources/soltros-gdm.png /ctx/desktop-files/gnome/usr/share/pixmaps/fedora-gdm-logo.png
+COPY variants/desktop-variants.json /ctx/desktop-variants.json
 COPY soltros.pub /ctx/soltros.pub
 COPY soltros.pub /etc/pki/containers/soltros.pub
 RUN chmod 644 /etc/pki/containers/soltros.pub
@@ -24,15 +27,21 @@ RUN chmod +x \
     /ctx/overrides.sh \
     /ctx/cleanup.sh \
     /ctx/desktop-packages.sh \
+    /ctx/apply-desktop-files.sh \
     /ctx/gaming.sh \
     /ctx/waterfox-installer.sh \
-    /ctx/kde-desktop.sh \
+    /ctx/desktops/kde.sh \
+    /ctx/desktops/gnome.sh \
+    /ctx/desktops/niri-common.sh \
+    /ctx/desktops/niri-dms.sh \
+    /ctx/desktops/niri-noctalia.sh \
     /ctx/build-initramfs.sh \
     /ctx/nix-package-manager.sh \
     /ctx/desktop-defaults.sh
 
-# Stage 2: final image
-FROM ${BASE_IMAGE}:${TAG_VERSION} AS soltros
+FROM ${BASE_IMAGE}:${TAG_VERSION} AS soltros-common
+
+ARG BASE_IMAGE
 
 # EXPLICIT DISTRO LABELS FOR BOOTC-IMAGE-BUILDER
 # These override any conflicting labels and force correct distro detection
@@ -43,7 +52,7 @@ LABEL ostree.linux="fedora" \
 
 # Your custom branding (these won't interfere)
 LABEL org.opencontainers.image.title="SoltrOS Desktop" \
-    org.opencontainers.image.description="Gaming-ready Fedora Kinoite image with MacBook support" \
+    org.opencontainers.image.description="Gaming-ready Fedora 44 bootc image with MacBook support" \
     org.opencontainers.image.vendor="Derrik"
 
 # Copy static system configuration and branding
@@ -52,14 +61,14 @@ COPY system_files/usr /usr
 COPY --from=third-party-tools /out/usr /usr
 COPY repo_files/*.repo /etc/yum.repos.d/
 COPY repo_files/flatpaks /usr/share/soltros/flatpaks
-COPY resources/soltros-gdm.png /usr/share/pixmaps/fedora-gdm-logo.png
+COPY variants/desktop-variants.json /usr/share/soltros/desktop-variants.json
 COPY resources/soltros-watermark.png /usr/share/plymouth/themes/spinner/watermark.png
 
 # Create necessary directories for shell configurations
 RUN mkdir -p /etc/profile.d /etc/fish/conf.d
 
 # Ensure Distrobox is installed
-RUN dnf5 install -y distrobox
+RUN dnf5 install -y distrobox jq
 
 # Install dnf5 plugins and setup CachyOS kernel repo
 RUN dnf5 -y install dnf5-plugins
@@ -108,11 +117,21 @@ RUN dnf5 remove plymouth* -y && \
     dnf5 clean all
 
 # Mount and run build script from ctx stage
-ARG BASE_IMAGE
 ENV KERNEL_FLAVOR=cachyos
 RUN --mount=type=bind,from=ctx,source=/ctx,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
-    BASE_IMAGE=$BASE_IMAGE bash /ctx/build.sh
+    BASE_IMAGE=$BASE_IMAGE BUILD_PHASE=common bash /ctx/build.sh
+
+FROM soltros-common AS soltros
+
+ARG BASE_IMAGE
+ARG DESKTOP_VARIANT
+
+LABEL org.soltros.desktop="${DESKTOP_VARIANT}"
+
+RUN --mount=type=bind,from=ctx,source=/ctx,target=/ctx \
+    --mount=type=tmpfs,dst=/tmp \
+    BASE_IMAGE=$BASE_IMAGE DESKTOP_VARIANT=$DESKTOP_VARIANT BUILD_PHASE=desktop bash /ctx/build.sh
 
 # Ensure bootc compatibility
 RUN ostree container commit

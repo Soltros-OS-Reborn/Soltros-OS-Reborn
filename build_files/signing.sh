@@ -7,10 +7,10 @@ set ${SET_X:+-x} -eou pipefail
 
 # Variables
 NAMESPACE="soltros-os-reborn"
-IMAGE_NAME="soltros-os-reborn"
 PUBKEY="/etc/pki/containers/soltros.pub"
 POLICY="/etc/containers/policy.json"
-REGISTRY="ghcr.io/${NAMESPACE}/${IMAGE_NAME}"
+REGISTRY="ghcr.io/${NAMESPACE}"
+MANIFEST="/ctx/desktop-variants.json"
 
 log() {
   echo "=== $* ==="
@@ -22,35 +22,23 @@ mkdir -p /etc/pki/containers
 mkdir -p /etc/containers/registries.d/
 
 log "Setting up secure policy.json"
-cat > "$POLICY" << EOF
-{
-    "default": [
-        {
-            "type": "reject"
-        }
-    ],
-    "transports": {
-        "docker": {
-            "$REGISTRY": [
-                {
-                    "type": "sigstoreSigned",
-                    "keyPath": "$PUBKEY",
-                    "signedIdentity": {
-                        "type": "matchRepository"
-                    }
-                }
-            ]
-        },
-        "docker-daemon": {
-            "": [
-                {
-                    "type": "insecureAcceptAnything"
-                }
-            ]
-        }
+jq --arg registry "${REGISTRY}" --arg key_path "${PUBKEY}" '
+  reduce .[].image_name as $image (
+    {};
+    .[$registry + "/" + $image] = [{
+      type: "sigstoreSigned",
+      keyPath: $key_path,
+      signedIdentity: {type: "matchRepository"}
+    }]
+  ) |
+  {
+    default: [{type: "reject"}],
+    transports: {
+      docker: .,
+      "docker-daemon": {"": [{type: "insecureAcceptAnything"}]}
     }
-}
-EOF
+  }
+' "${MANIFEST}" > "${POLICY}"
 
 log "Installing cosign public key"
 if [ -f /ctx/soltros.pub ]; then
@@ -69,14 +57,16 @@ chmod 644 "$PUBKEY"
 chmod 644 "$POLICY"
 
 log "Creating registry policy YAML"
-cat > "/etc/containers/registries.d/${NAMESPACE}.yaml" << EOF
-docker:
-  ${REGISTRY}:
-    use-sigstore-attachments: true
-EOF
+{
+    echo 'docker:'
+    while IFS= read -r image_name; do
+        printf '  %s/%s:\n' "${REGISTRY}" "${image_name}"
+        echo '    use-sigstore-attachments: true'
+    done < <(jq -r '.[].image_name' "${MANIFEST}")
+} > "/etc/containers/registries.d/${NAMESPACE}.yaml"
 
 log "Verifying policy configuration"
 # Basic syntax check
 jq empty "$POLICY"
 
-log "Signing policy setup complete for $REGISTRY"
+log "Signing policy setup complete for repositories in $REGISTRY"

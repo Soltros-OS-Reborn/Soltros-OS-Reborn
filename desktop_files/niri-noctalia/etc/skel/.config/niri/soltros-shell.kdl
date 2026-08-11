@@ -1,0 +1,6 @@
+spawn-at-startup "noctalia" "--daemon"
+
+binds {
+    Mod+Space hotkey-overlay-title="Application Launcher" { spawn "noctalia" "msg" "panel-toggle" "launcher"; }
+    Mod+Shift+L hotkey-overlay-title="Lock Screen" { spawn "noctalia" "msg" "session" "lock"; }
+}

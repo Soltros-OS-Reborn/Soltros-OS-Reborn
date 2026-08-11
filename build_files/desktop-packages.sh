@@ -28,6 +28,7 @@ LAYERED_PACKAGES=(
     pipewire-pulse
     wireplumber
     just
+    jq
     nebula
     pipewire-alsa
     deja-dup
@@ -61,9 +62,6 @@ LAYERED_PACKAGES=(
     fwupd-plugin-modem-manager
     fwupd-plugin-uefi-capsule-data
     libvirtd
-    
-    # Display manager
-    sddm
     
     # Gaming & performance
     gamemode
@@ -115,9 +113,7 @@ LAYERED_PACKAGES=(
     samba-client
     cifs-utils
     virt-manager
-    gnome-boxes
-    gnome-tweaks
-    
+
     # Multimedia/audio
     pipewire-utils
     wireplumber

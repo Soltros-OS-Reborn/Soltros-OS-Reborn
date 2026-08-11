@@ -50,7 +50,8 @@ LABEL org.opencontainers.image.title="SoltrOS Desktop" \
 COPY system_files/etc /etc
 COPY system_files/usr /usr
 COPY --from=third-party-tools /out/usr /usr
-COPY repo_files/ /etc/yum.repos.d/
+COPY repo_files/*.repo /etc/yum.repos.d/
+COPY repo_files/flatpaks /usr/share/soltros/flatpaks
 COPY resources/soltros-gdm.png /usr/share/pixmaps/fedora-gdm-logo.png
 COPY resources/soltros-watermark.png /usr/share/plymouth/themes/spinner/watermark.png
 

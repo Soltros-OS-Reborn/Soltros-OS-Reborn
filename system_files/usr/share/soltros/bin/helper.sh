@@ -4,6 +4,9 @@
 
 set -euo pipefail
 
+SOLTROS_DATA_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+readonly SOLTROS_DATA_DIR
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -41,7 +44,7 @@ Usage: helper [COMMAND]
 
 INSTALL COMMANDS:
   install                 Install all SoltrOS components
-  install-flatpaks        Install Flatpak applications from remote list
+  install-flatpaks        Install Flatpak applications from bundled list
   install-dev-tools       Install development tools via Flatpak
   install-gaming          Install gaming tools via Flatpak
   install-multimedia      Install multimedia tools via Flatpak
@@ -96,7 +99,14 @@ soltros_install() {
 }
 
 soltros_install_flatpaks() {
-    print_header "Installing Flatpak applications from remote list"
+    local flatpak_list="${SOLTROS_DATA_DIR}/flatpaks"
+
+    print_header "Installing Flatpak applications from bundled list"
+
+    if [[ ! -s "${flatpak_list}" ]]; then
+        print_error "Flatpak application list not found: ${flatpak_list}"
+        exit 1
+    fi
     
     print_info "Setting up Flathub repository..."
     if ! flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo; then
@@ -104,8 +114,8 @@ soltros_install_flatpaks() {
         exit 1
     fi
     
-    print_info "Downloading flatpak list and installing..."
-    if xargs -a <(curl --retry 3 -sL https://raw.githubusercontent.com/Soltros-OS-Reborn/Soltros-OS-Reborn/main/repo_files/flatpaks) flatpak --system -y install --reinstall; then
+    print_info "Installing applications from bundled Flatpak list..."
+    if xargs --no-run-if-empty -a "${flatpak_list}" flatpak --system -y install --reinstall; then
         print_success "Flatpaks installation complete"
     else
         print_error "Failed to install flatpaks"

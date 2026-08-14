@@ -39,8 +39,9 @@ generated policy.
 After a successful gated build containing the LiveISO, run **Publish SoltrOS
 Reborn release** with its workflow run ID and the desired release tag. The
 workflow requires a successful source run, downloads its artifacts, verifies all
-checksums, signs every ISO, and creates a durable GitHub Release containing the
-ISO, checksum, signature, SPDX SBOM, provenance, embedded-image inventory,
+checksums, signs and verifies every ISO with a Sigstore bundle, and creates a
+durable GitHub Release containing the ISO, checksum, signature bundle, SPDX SBOM,
+provenance, embedded-image inventory,
 release index, and per-image metadata.
 
 ## Rollback

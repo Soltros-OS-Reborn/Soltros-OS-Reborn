@@ -19,7 +19,7 @@ sha256sum "${iso_path}" > "${artifact_dir}/${iso_name}.sha256"
 build_id="${BUILD_ID:-$(git -C "${repo_root}" rev-parse --verify HEAD 2>/dev/null || printf unknown)}"
 iso_digest="$(sha256sum "${iso_path}" | awk '{print $1}')"
 if [[ -n "${COSIGN_PRIVATE_KEY:-}" && -n "${COSIGN_PASSWORD:-}" && -n "${COSIGN:-}" ]]; then
-  signature_artifact="${iso_name}.sig"
+  signature_artifact="${iso_name}.sigstore.json"
 else
   signature_artifact="${iso_name}.signature-status"
 fi
@@ -58,7 +58,8 @@ jq -S -n \
   > "${artifact_dir}/release-index.json"
 
 if [[ -n "${COSIGN_PRIVATE_KEY:-}" && -n "${COSIGN_PASSWORD:-}" && -n "${COSIGN:-}" ]]; then
-  "${COSIGN}" sign-blob --yes --key env://COSIGN_PRIVATE_KEY --output-signature "${artifact_dir}/${iso_name}.sig" "${iso_path}"
+  "${COSIGN}" sign-blob --yes --key env://COSIGN_PRIVATE_KEY --bundle "${artifact_dir}/${iso_name}.sigstore.json" "${iso_path}"
+  "${COSIGN}" verify-blob --key "${repo_root}/soltros.pub" --bundle "${artifact_dir}/${iso_name}.sigstore.json" "${iso_path}"
 else
   printf '%s\n' 'ISO signature not generated: configure COSIGN, COSIGN_PRIVATE_KEY, and COSIGN_PASSWORD in the release job.' > "${artifact_dir}/${iso_name}.signature-status"
 fi

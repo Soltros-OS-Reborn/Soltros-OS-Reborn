@@ -59,7 +59,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+      - uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
       - name: Verify and promote immutable digest
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
@@ -71,9 +71,9 @@ jobs:
         run: |
           image="${IMAGE_REGISTRY}/${IMAGE_NAME}"
           digest="$(skopeo inspect --format '{{.Digest}}' "docker://${image}:${SOURCE_CHANNEL}")"
-          cosign verify --key soltros.pub "${image}@${digest}"
+          cosign verify --new-bundle-format=false --key soltros.pub "${image}@${digest}"
           skopeo copy --all "docker://${image}@${digest}" "docker://${image}:${TARGET_CHANNEL}"
-          cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${image}@${digest}"
+          cosign sign --new-bundle-format=false --yes --key env://COSIGN_PRIVATE_KEY "${image}@${digest}"
           target_digest="$(skopeo inspect --format '{{.Digest}}' "docker://${image}:${TARGET_CHANNEL}")"
           test "${target_digest}" = "${digest}"
-          cosign verify --key soltros.pub "${image}@${target_digest}"
+          cosign verify --new-bundle-format=false --key soltros.pub "${image}@${target_digest}"

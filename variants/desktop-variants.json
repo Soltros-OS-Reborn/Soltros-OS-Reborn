@@ -27,7 +27,7 @@
     "description": "A scrolling Wayland compositor with the integrated Dank Material Shell.",
     "base_image": "quay.io/fedora/fedora-bootc",
     "base_tag": "44",
-    "base_digest": "sha256:963c0fdb26c7f3a01fe8b911a92a21eb86c2d38fd1ec75101503d767aeb06c1f",
+    "base_digest": "sha256:ff18dfdd91e4dfb02a8260b7fbc4e4863a452ff9bd8e8a478794c3c2ac4f2d6d",
     "image_name": "soltros-os-niri-dms",
     "session": "niri",
     "display_manager": "greetd"
@@ -38,7 +38,7 @@
     "description": "A scrolling Wayland compositor with the native Noctalia desktop shell.",
     "base_image": "quay.io/fedora/fedora-bootc",
     "base_tag": "44",
-    "base_digest": "sha256:963c0fdb26c7f3a01fe8b911a92a21eb86c2d38fd1ec75101503d767aeb06c1f",
+    "base_digest": "sha256:ff18dfdd91e4dfb02a8260b7fbc4e4863a452ff9bd8e8a478794c3c2ac4f2d6d",
     "image_name": "soltros-os-niri-noctalia",
     "session": "niri",
     "display_manager": "greetd"

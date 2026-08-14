@@ -20,7 +20,7 @@ jobs:
       contents: write
       id-token: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Enforce publication gate
         run: jq -e '.publication.enabled and .publication.repository_ready' release/release.json >/dev/null
       - uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2

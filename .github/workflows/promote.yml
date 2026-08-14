@@ -25,7 +25,7 @@ jobs:
       matrix: ${{ steps.check.outputs.matrix }}
       registry: ${{ steps.check.outputs.registry }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - id: check
         env:
           SOURCE_CHANNEL: ${{ inputs.source_channel }}

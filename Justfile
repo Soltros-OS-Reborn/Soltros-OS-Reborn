@@ -11,6 +11,12 @@ default:
 
 # Run source-level project contracts.
 test:
+    @for command_name in jq rg; do \
+      command -v "${command_name}" >/dev/null || { \
+        printf 'Required validation command is missing: %s\n' "${command_name}" >&2; \
+        exit 1; \
+      }; \
+    done
     @for test_script in tests/*.sh; do "${test_script}"; done
 
 # Run the local source validation gate.

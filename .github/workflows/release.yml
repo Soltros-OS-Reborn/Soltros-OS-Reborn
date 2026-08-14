@@ -40,7 +40,8 @@ jobs:
             (cd "$(dirname "${checksum}")" && sha256sum --check "$(basename "${checksum}")")
           done
           find release-download -type f -name '*.iso' -print0 | while IFS= read -r -d '' iso; do
-            cosign sign-blob --yes --key env://COSIGN_PRIVATE_KEY --output-signature "${iso}.sig" "${iso}"
+            cosign sign-blob --yes --key env://COSIGN_PRIVATE_KEY --bundle "${iso}.sigstore.json" "${iso}"
+            cosign verify-blob --key soltros.pub --bundle "${iso}.sigstore.json" "${iso}"
           done
       - name: Publish durable GitHub release
         env:

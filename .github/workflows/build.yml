@@ -236,12 +236,12 @@ jobs:
           sbom_file="$(find image-artifacts -type f -name '*.spdx.json' -print -quit)"
           provenance_file="$(find image-artifacts -type f -name '*.provenance.json' -print -quit)"
           jq '.predicate' "${provenance_file}" > /tmp/soltros-provenance-predicate.json
-          cosign sign -y --key env://COSIGN_PRIVATE_KEY "${IMAGE_FULL}@${DIGEST}"
-          cosign verify --key soltros.pub "${IMAGE_FULL}@${DIGEST}"
-          cosign attest --yes --key env://COSIGN_PRIVATE_KEY --type spdxjson --predicate "${sbom_file}" "${IMAGE_FULL}@${DIGEST}"
-          cosign attest --yes --key env://COSIGN_PRIVATE_KEY --type slsaprovenance --predicate /tmp/soltros-provenance-predicate.json "${IMAGE_FULL}@${DIGEST}"
-          cosign verify-attestation --key soltros.pub --type spdxjson "${IMAGE_FULL}@${DIGEST}"
-          cosign verify-attestation --key soltros.pub --type slsaprovenance "${IMAGE_FULL}@${DIGEST}"
+          cosign sign --new-bundle-format=false -y --key env://COSIGN_PRIVATE_KEY "${IMAGE_FULL}@${DIGEST}"
+          cosign verify --new-bundle-format=false --key soltros.pub "${IMAGE_FULL}@${DIGEST}"
+          cosign attest --new-bundle-format=false --yes --key env://COSIGN_PRIVATE_KEY --type spdxjson --predicate "${sbom_file}" "${IMAGE_FULL}@${DIGEST}"
+          cosign attest --new-bundle-format=false --yes --key env://COSIGN_PRIVATE_KEY --type slsaprovenance --predicate /tmp/soltros-provenance-predicate.json "${IMAGE_FULL}@${DIGEST}"
+          cosign verify-attestation --new-bundle-format=false --key soltros.pub --type spdxjson "${IMAGE_FULL}@${DIGEST}"
+          cosign verify-attestation --new-bundle-format=false --key soltros.pub --type slsaprovenance "${IMAGE_FULL}@${DIGEST}"
 
       - name: Promote verified image to development channel
         if: needs.prepare.outputs.publish_enabled == 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
@@ -250,7 +250,7 @@ jobs:
         run: |
           IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
           skopeo copy --all "docker://${IMAGE_FULL}@${DIGEST}" "docker://${IMAGE_FULL}:${DEFAULT_TAG}"
-          cosign verify --key soltros.pub "${IMAGE_FULL}@${DIGEST}"
+          cosign verify --new-bundle-format=false --key soltros.pub "${IMAGE_FULL}@${DIGEST}"
 
   build_iso:
     name: Build desktop-selectable LiveISO

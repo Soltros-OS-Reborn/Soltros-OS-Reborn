@@ -71,9 +71,9 @@ jobs:
         run: |
           image="${IMAGE_REGISTRY}/${IMAGE_NAME}"
           digest="$(skopeo inspect --format '{{.Digest}}' "docker://${image}:${SOURCE_CHANNEL}")"
-          cosign verify --key soltros.pub "${image}@${digest}"
+          cosign verify --new-bundle-format=false --key soltros.pub "${image}@${digest}"
           skopeo copy --all "docker://${image}@${digest}" "docker://${image}:${TARGET_CHANNEL}"
-          cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${image}@${digest}"
+          cosign sign --new-bundle-format=false --yes --key env://COSIGN_PRIVATE_KEY "${image}@${digest}"
           target_digest="$(skopeo inspect --format '{{.Digest}}' "docker://${image}:${TARGET_CHANNEL}")"
           test "${target_digest}" = "${digest}"
-          cosign verify --key soltros.pub "${image}@${target_digest}"
+          cosign verify --new-bundle-format=false --key soltros.pub "${image}@${target_digest}"

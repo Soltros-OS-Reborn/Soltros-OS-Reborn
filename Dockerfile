@@ -114,6 +114,12 @@ RUN --mount=type=bind,from=ctx,source=/ctx,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
     BASE_IMAGE=$BASE_REF DESKTOP_VARIANT=$DESKTOP_VARIANT BUILD_PHASE=desktop bash /ctx/build.sh
 
-# Ensure bootc compatibility
-RUN bootc container lint
-RUN ostree container commit
+RUN rpm --rebuilddb && \
+    rpm --verifydb && \
+    rpm -q --whatprovides \
+      'filesystem(unmerged-sbin-symlinks)' \
+      'libuuid.so.1()(64bit)' \
+      'group(tss)' && \
+    bootc container lint && \
+    ostree container commit && \
+    rpm --verifydb

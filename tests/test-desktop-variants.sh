@@ -57,6 +57,14 @@ if ! grep -Fq 'ARG DESKTOP_VARIANT=kde' "${dockerfile}" ||
     fail 'Dockerfile must pass the selected desktop variant into the build entry point'
 fi
 
+if ! grep -Fq 'rpm --rebuilddb' "${dockerfile}" ||
+    ! grep -Fq 'rpm --verifydb' "${dockerfile}" ||
+    ! grep -Fq "'filesystem(unmerged-sbin-symlinks)'" "${dockerfile}" ||
+    ! grep -Fq "'libuuid.so.1()(64bit)'" "${dockerfile}" ||
+    ! grep -Fq "'group(tss)'" "${dockerfile}"; then
+    fail 'Dockerfile must rebuild and validate RPM capability indexes before publication'
+fi
+
 grep -Fq 'FROM soltros-common AS soltros' "${dockerfile}" ||
     fail 'Dockerfile must isolate the shared system stage from desktop stages'
 

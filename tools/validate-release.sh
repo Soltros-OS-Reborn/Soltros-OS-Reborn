@@ -16,6 +16,7 @@ jq -e '
   (.publication.enabled | type == "boolean") and
   (.publication.repository_ready | type == "boolean") and
   (.publication.registry | test("^[a-z0-9.-]+/[a-z0-9._/-]+$")) and
+  (.trust.public_key_sha256 | test("^[0-9a-f]{64}$")) and
   (.trust.key_paths | length >= 1) and
   all(.trust.key_paths[]; startswith("/usr/share/pki/containers/")) and
   (.kernel.package | test("^kernel-[a-z0-9-]+$")) and
@@ -26,6 +27,13 @@ jq -e '
   (.installer.online_update_default == false) and
   (.installer.online_update_requires_consent == true)
 ' "${release_manifest}" >/dev/null
+
+expected_public_key_sha256="$(jq -er '.trust.public_key_sha256' "${release_manifest}")"
+actual_public_key_sha256="$(sha256sum "${repo_root}/soltros.pub" | awk '{print $1}')"
+if [[ "${actual_public_key_sha256}" != "${expected_public_key_sha256}" ]]; then
+  echo 'Committed signing public key does not match the release manifest fingerprint.' >&2
+  exit 1
+fi
 
 jq -e '
   .schema_version == 1 and

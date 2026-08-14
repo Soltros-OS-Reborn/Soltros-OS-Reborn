@@ -2,11 +2,24 @@
 
 ## Publication Gate
 
-Reborn publication is disabled while either `publication.enabled` or
-`publication.repository_ready` is `false` in `release/release.json`. Enabling a
-release requires the GHCR namespace, package permissions, Cosign private key,
-password, and public key to be configured first. Regenerate and commit release
-assets with `just generate-release-assets` after changing the manifest.
+Reborn publication is enabled for the public `ghcr.io/soltros-os-reborn`
+namespace. Both publication flags in `release/release.json` must remain true for
+a main-branch build to publish. The build workflow creates each package with the
+repository-scoped `packages: write` token, makes it public, and verifies the
+reported visibility only after signing, attestation verification, and `dev`
+channel promotion complete.
+
+The repository uses a Reborn-owned Cosign key. Its public-key SHA-256
+fingerprint is:
+
+```text
+e1c573c15443f249a0603c83d71658737ab00e2d2c8e7c667f378f7972ad557b
+```
+
+`COSIGN_PRIVATE_KEY` and `COSIGN_PASSWORD` are repository Actions secrets. The
+encrypted private key must never be committed. After a future key rotation,
+replace `soltros.pub`, update `trust.public_key_sha256`, refresh both secrets,
+run `just generate-release-assets`, and publish a complete four-image set.
 
 ## Image Build
 
@@ -17,8 +30,12 @@ workflow generates SPDX and SLSA provenance, pushes the immutable image, signs
 and verifies its digest, attaches and verifies both attestations, and finally
 copies that digest to the `dev` channel.
 
-No pull-request build publishes images. A main-branch build also remains local
-while the publication gate is closed.
+No pull-request build publishes images. Official public package endpoints are:
+
+- `ghcr.io/soltros-os-reborn/soltros-os`;
+- `ghcr.io/soltros-os-reborn/soltros-os-gnome`;
+- `ghcr.io/soltros-os-reborn/soltros-os-niri-dms`;
+- `ghcr.io/soltros-os-reborn/soltros-os-niri-noctalia`.
 
 ## Channel Promotion
 

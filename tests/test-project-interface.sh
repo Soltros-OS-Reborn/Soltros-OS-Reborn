@@ -14,7 +14,7 @@ for recipe in test validate build-image build-images build-offline-payload build
     }
 done
 
-grep -Fq 'Reborn image has been published' "${roadmap}"
+grep -Fq 'Reborn images are published' "${roadmap}"
 grep -Fq 'complete, usable offline SoltrOS environment' "${roadmap}"
 grep -Fq 'user explicitly opts in' "${roadmap}"
 

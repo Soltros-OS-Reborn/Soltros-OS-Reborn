@@ -58,7 +58,7 @@ When Podman is unavailable, validate shell syntax without executing privileged i
 find build_files system_files -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
 ```
 
-Review a generated image with `podman run --rm -it localhost/soltros-reborn/soltros-os:dev` when a local image build is available. CI builds and smoke-tests the full manifest matrix. Publication and durable LiveISO release jobs remain disabled until both release manifest publication gates are enabled.
+Review a generated image with `podman run --rm -it localhost/soltros-reborn/soltros-os:dev` when a local image build is available. CI builds and smoke-tests the full manifest matrix. Main-branch builds publish signed public packages because both release manifest publication gates are enabled; durable LiveISO publication remains a separate manual release workflow.
 
 ## IMPLEMENTATION CONVENTIONS
 

@@ -6,8 +6,15 @@ repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
 "${repo_root}/tools/validate-release.sh"
 
-jq -e '.publication.enabled == false and .publication.repository_ready == false' \
+jq -e '.publication.enabled == true and .publication.repository_ready == true' \
   "${repo_root}/release/release.json" >/dev/null
+
+expected_public_key_sha256="$(jq -er '.trust.public_key_sha256' \
+  "${repo_root}/release/release.json")"
+actual_public_key_sha256="$(sha256sum "${repo_root}/soltros.pub" | awk '{print $1}')"
+test "${actual_public_key_sha256}" = "${expected_public_key_sha256}"
+test "${actual_public_key_sha256}" != \
+  'adb0e64498d04ca556ce5b2577a7c6bf073eeaae5484e04e38bffbe894a1374b'
 
 for workflow in build promote release; do
   if grep -Fq "if: \${{ false }}" "${repo_root}/.github/workflows/${workflow}.yml"; then
@@ -18,6 +25,9 @@ done
 grep -Fq 'release/release.json' "${repo_root}/.github/workflows/promote.yml"
 grep -Fq 'release/release.json' "${repo_root}/.github/workflows/release.yml"
 grep -Fq 'cosign verify-attestation' "${repo_root}/.github/workflows/build.yml"
+grep -Fq 'Make GitHub Package public' "${repo_root}/.github/workflows/build.yml"
+grep -Fq 'gh api --method PATCH' "${repo_root}/.github/workflows/build.yml"
+grep -Fq 'visibility=public' "${repo_root}/.github/workflows/build.yml"
 grep -Fq 'gh release create' "${repo_root}/.github/workflows/release.yml"
 
 container_cosign_commands="$(rg '^[[:space:]]+cosign (sign|verify|attest|verify-attestation) ' \
@@ -57,4 +67,4 @@ if rg -n -i --glob '!tests/test-release-contracts.sh' \
   exit 1
 fi
 
-printf 'PASS: unpublished release and reproducible source contracts\n'
+printf 'PASS: published release and reproducible source contracts\n'

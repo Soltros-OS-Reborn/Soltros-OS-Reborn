@@ -4,7 +4,7 @@
   "online_update_default": false,
   "online_update_requires_consent": true,
   "payload_path": "/usr/share/soltros/installer",
-  "publication_enabled": false,
+  "publication_enabled": true,
   "registry": "ghcr.io/soltros-os-reborn",
   "schema_version": 1,
   "stable_channel": "stable",

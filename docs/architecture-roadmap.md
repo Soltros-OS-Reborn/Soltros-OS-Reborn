@@ -6,9 +6,8 @@ separate in Phase 6 and Runtime Evidence.
 
 ## Non-Negotiable Product Contracts
 
-- [x] Record that no SoltrOS Reborn image has been published to GitHub Container
-  Registry yet. Existing package references must not be treated as available
-  Reborn releases or used as offline installation sources.
+- [x] Reborn images are published to the project-owned GitHub Container Registry
+  namespace with four independently signed desktop packages.
 - [x] Define the LiveISO as a complete, usable offline SoltrOS environment rather
   than an installer-only boot image.
 - [x] Require the LiveISO to install KDE Plasma, GNOME, Niri with Dank Material
@@ -93,7 +92,8 @@ separate in Phase 6 and Runtime Evidence.
 - [x] Publish the offline LiveISO through a durable release surface rather than a
   short-lived CI artifact.
 - [x] Keep publication disabled until the repository owner explicitly enables the
-  Reborn package namespace and release credentials.
+  Reborn package namespace and release credentials, then publish all four packages
+  through the signed channel-promotion workflow.
 
 ## Phase 6: End-to-End QA and Release Gate
 
@@ -133,6 +133,10 @@ separate in Phase 6 and Runtime Evidence.
 
 - **2026-08-11:** Reborn images are not yet published. Registry references in the
   source are development targets, not evidence of available Reborn packages.
+- **2026-08-14:** The repository owner authorized publication. All Reborn package
+  paths now use `ghcr.io/soltros-os-reborn`, and the original project's signing
+  key was replaced with the Reborn public key whose SHA-256 fingerprint is
+  `e1c573c15443f249a0603c83d71658737ab00e2d2c8e7c667f378f7972ad557b`.
 - **2026-08-11:** The final LiveISO must be offline-first and fully usable. A thin
   network installer alone does not satisfy the product contract.
 - **2026-08-11:** Online installation updates are optional, explicit, signed, and

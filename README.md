@@ -6,44 +6,57 @@
 
 Project repository: [Soltros-OS-Reborn/Soltros-OS-Reborn](https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn)
 
-SoltrOS Reborn images have not been published yet. The registry paths below are
-reserved release targets and must not be treated as currently installable images.
+Official SoltrOS Reborn images are published from this repository to the public
+`ghcr.io/soltros-os-reborn` namespace. The signed `stable` channel is the
+recommended installation and update source.
 
 A gaming-optimized immutable Linux distribution based on Fedora bootc images, featuring MacBook hardware support, gaming enhancements, CachyOS kernel performance, and developer-friendly tools. Each desktop variant is built as a separate image so the immutable system never carries a second display manager or desktop stack.
 
 ## Desktop Variants
 
-| Variant | Planned OCI image | Session and login path |
+| Variant | Official OCI image | Session and login path |
 | --- | --- | --- |
-| KDE Plasma | `ghcr.io/soltros-os-reborn/soltros-os:latest` | Plasma Login Manager |
-| GNOME | `ghcr.io/soltros-os-reborn/soltros-os-gnome:latest` | GDM |
-| Niri + Dank Material Shell | `ghcr.io/soltros-os-reborn/soltros-os-niri-dms:latest` | greetd and DMS |
-| Niri + Noctalia | `ghcr.io/soltros-os-reborn/soltros-os-niri-noctalia:latest` | greetd and Noctalia |
+| KDE Plasma | `ghcr.io/soltros-os-reborn/soltros-os:stable` | Plasma Login Manager |
+| GNOME | `ghcr.io/soltros-os-reborn/soltros-os-gnome:stable` | GDM |
+| Niri + Dank Material Shell | `ghcr.io/soltros-os-reborn/soltros-os-niri-dms:stable` | greetd and DMS |
+| Niri + Noctalia | `ghcr.io/soltros-os-reborn/soltros-os-niri-noctalia:stable` | greetd and Noctalia |
 
-The source of truth for these variants is [`variants/desktop-variants.json`](variants/desktop-variants.json). CI builds and smoke-tests every entry; publication remains gated by [`release/release.json`](release/release.json).
+The source of truth for these variants is [`variants/desktop-variants.json`](variants/desktop-variants.json). CI builds, smoke-tests, signs, and publishes every entry through the channels defined in [`release/release.json`](release/release.json).
 
 *Inspired by [VenOS](https://github.com/Venefilyn/veneos) - bringing together the best of gaming and productivity.*
 
-Rebase commands will be published only after the Reborn packages, signatures,
-release channels, and rollback path have passed the release gate.
+# Signing Key Rotation Notice
 
-# NOTICE:
-There has been an issue with policy.json not being generated correctly, resulting in an issue with bootc. This should now be fixed in future, fresh installed images as well as the ISO. However, if you are experiencing this issue on a current version of SoltrOS, please do the following or updating will not work:
+The Reborn project uses its own signing key and does not trust the discontinued
+project's key. The current public-key SHA-256 fingerprint is:
+
+```text
+e1c573c15443f249a0603c83d71658737ab00e2d2c8e7c667f378f7972ad557b
+```
+
+Systems created from an earlier development image must refresh both trust files
+before switching to an official channel.
 
 ### 1. Download the public key
-```
+```bash
 sudo mkdir -p /etc/pki/containers
-sudo curl -L https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn/raw/main/soltros.pub -o /etc/pki/containers/soltros.pub
+sudo curl --fail --location --proto '=https' --tlsv1.2 \
+  https://raw.githubusercontent.com/Soltros-OS-Reborn/Soltros-OS-Reborn/main/soltros.pub \
+  --output /etc/pki/containers/soltros.pub
 ```
 ### 2. Download the secure policy
-```
+```bash
 sudo mkdir -p /etc/containers
-sudo curl -L https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn/raw/main/resources/policy.json -o /etc/containers/policy.json
+sudo curl --fail --location --proto '=https' --tlsv1.2 \
+  https://raw.githubusercontent.com/Soltros-OS-Reborn/Soltros-OS-Reborn/main/resources/policy.json \
+  --output /etc/containers/policy.json
 ```
 ### 3. Verify permissions
-```
+```bash
 sudo chmod 644 /etc/pki/containers/soltros.pub
 sudo chmod 644 /etc/containers/policy.json
+test "$(sha256sum /etc/pki/containers/soltros.pub | awk '{print $1}')" = \
+  e1c573c15443f249a0603c83d71658737ab00e2d2c8e7c667f378f7972ad557b
 ```
 
 ## 🚀 Features
@@ -114,7 +127,32 @@ Access to any Linux distribution's packages via containerized environments - all
 
 #### Method 1: Rebase from existing Fedora Atomic
 
-This method is not available until the Reborn OCI images are published.
+Install the Reborn signing key and policy from the rotation notice above, then
+select exactly one desktop image:
+
+```bash
+# KDE Plasma
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os:stable
+
+# GNOME
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-gnome:stable
+
+# Niri + Dank Material Shell
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-niri-dms:stable
+
+# Niri + Noctalia
+sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os-niri-noctalia:stable
+```
+
+Reboot after the selected command succeeds:
+
+```bash
+sudo systemctl reboot
+```
+
+The system records the selected image as its signed update source. Use
+`soltros status`, `soltros update`, and `soltros rollback` for normal lifecycle
+operations.
 
 #### Method 2: Fresh Installation
 The development installer currently exercises the Anaconda path. The release

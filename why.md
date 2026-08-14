@@ -310,16 +310,18 @@ Anaconda Web UI. Network access is not required.
 
 ### Migration from Existing Systems
 
-Migration commands will be published only with signed Reborn image references.
+Install the Reborn public key and generated containers policy, then select one
+signed `stable` image with `bootc switch`. The exact KDE, GNOME, Niri + DMS, and
+Niri + Noctalia commands are maintained in `README.md`.
 
 ### Backup and Rollback
 
 ```bash
 # List available deployments
-rpm-ostree status
+bootc status
 
 # Rollback to previous version
-rpm-ostree rollback
+sudo bootc rollback
 sudo systemctl reboot
 ```
 

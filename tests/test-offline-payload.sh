@@ -54,7 +54,7 @@ jq -e '
     (.source_digest | test("^sha256:[0-9a-f]{64}$")) and
     (.update_ref | startswith("ghcr.io/soltros-os-reborn/")) and
     (.update_ref | endswith(":stable")) and
-    (.online_updates_available == false))
+    (.online_updates_available == true))
 ' "${test_root}/payload/catalog.json" >/dev/null
 
 jq -e '

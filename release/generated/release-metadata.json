@@ -24,11 +24,17 @@
     "release_version": "1"
   },
   "publication": {
-    "enabled": false,
+    "enabled": true,
     "registry": "ghcr.io/soltros-os-reborn",
-    "repository_ready": false
+    "repository_ready": true
   },
   "schema_version": 1,
+  "trust": {
+    "key_paths": [
+      "/usr/share/pki/containers/soltros.pub"
+    ],
+    "public_key_sha256": "e1c573c15443f249a0603c83d71658737ab00e2d2c8e7c667f378f7972ad557b"
+  },
   "variant_count": 4,
   "variants": [
     {

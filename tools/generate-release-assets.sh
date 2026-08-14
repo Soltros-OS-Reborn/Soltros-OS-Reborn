@@ -24,6 +24,7 @@ jq -S -n \
     schema_version: 1,
     product: $release[0].product,
     publication: $release[0].publication,
+    trust: $release[0].trust,
     channels: $release[0].channels,
     installer: $release[0].installer,
     variant_count: ($variants[0] | length),

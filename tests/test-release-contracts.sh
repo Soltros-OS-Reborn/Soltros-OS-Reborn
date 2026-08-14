@@ -25,9 +25,14 @@ done
 grep -Fq 'release/release.json' "${repo_root}/.github/workflows/promote.yml"
 grep -Fq 'release/release.json' "${repo_root}/.github/workflows/release.yml"
 grep -Fq 'cosign verify-attestation' "${repo_root}/.github/workflows/build.yml"
-grep -Fq 'Make GitHub Package public' "${repo_root}/.github/workflows/build.yml"
-grep -Fq 'gh api --method PATCH' "${repo_root}/.github/workflows/build.yml"
-grep -Fq 'visibility=public' "${repo_root}/.github/workflows/build.yml"
+grep -Fq 'Verify GitHub Package is public' "${repo_root}/.github/workflows/build.yml"
+grep -Fq 'skopeo inspect --authfile' "${repo_root}/.github/workflows/build.yml"
+grep -Fq "docker://\${IMAGE_REGISTRY}/\${IMAGE_NAME}:\${DEFAULT_TAG}" \
+  "${repo_root}/.github/workflows/build.yml"
+if grep -Fq 'gh api --method PATCH' "${repo_root}/.github/workflows/build.yml"; then
+  echo 'The removed GitHub Packages visibility PATCH endpoint must not be used.' >&2
+  exit 1
+fi
 grep -Fq 'gh release create' "${repo_root}/.github/workflows/release.yml"
 
 container_cosign_commands="$(rg '^[[:space:]]+cosign (sign|verify|attest|verify-attestation) ' \

@@ -252,14 +252,14 @@ jobs:
           skopeo copy --all "docker://${IMAGE_FULL}@${DIGEST}" "docker://${IMAGE_FULL}:${DEFAULT_TAG}"
           cosign verify --new-bundle-format=false --key soltros.pub "${IMAGE_FULL}@${DIGEST}"
 
-      - name: Make GitHub Package public
+      - name: Verify GitHub Package is public
         if: needs.prepare.outputs.publish_enabled == 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-        env:
-          GH_TOKEN: ${{ github.token }}
         run: |
-          package_path="/orgs/${GITHUB_REPOSITORY_OWNER}/packages/container/${IMAGE_NAME}"
-          gh api --method PATCH "${package_path}" -f visibility=public
-          test "$(gh api "${package_path}" --jq '.visibility')" = public
+          anonymous_auth_file="$(mktemp)"
+          trap 'unlink "${anonymous_auth_file}"' EXIT
+          printf '{}\n' > "${anonymous_auth_file}"
+          skopeo inspect --authfile "${anonymous_auth_file}" \
+            "docker://${IMAGE_REGISTRY}/${IMAGE_NAME}:${DEFAULT_TAG}" >/dev/null
 
   build_iso:
     name: Build desktop-selectable LiveISO

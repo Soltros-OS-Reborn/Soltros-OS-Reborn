@@ -4,10 +4,12 @@
 
 Reborn publication is enabled for the public `ghcr.io/soltros-os-reborn`
 namespace. Both publication flags in `release/release.json` must remain true for
-a main-branch build to publish. The build workflow creates each package with the
-repository-scoped `packages: write` token, makes it public, and verifies the
-reported visibility only after signing, attestation verification, and `dev`
-channel promotion complete.
+a main-branch build to publish. Organization administrators must allow public
+package creation and set each official package to public before its first
+release. The build workflow creates and updates each package with the
+repository-scoped `packages: write` token, then verifies an anonymous OCI pull
+only after signing, attestation verification, and `dev` channel promotion
+complete. This keeps package-administration credentials out of Actions.
 
 The repository uses a Reborn-owned Cosign key. Its public-key SHA-256
 fingerprint is:

@@ -6,6 +6,7 @@ repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 release_manifest="${repo_root}/release/release.json"
 source_lock="${repo_root}/release/sources.lock.json"
 variant_manifest="${repo_root}/variants/desktop-variants.json"
+fedora_version="$(jq -er '.product.fedora_version | tostring' "${release_manifest}")"
 
 jq -e '
   .schema_version == 1 and
@@ -46,11 +47,14 @@ jq -e '
   (.shell_assets.grc_fish_sha256 | test("^[0-9a-f]{64}$"))
 ' "${source_lock}" >/dev/null
 
-jq -e '
+jq -e --arg fedora_version "${fedora_version}" '
   length == 4 and
   ([.[].id] | unique | length == length) and
   ([.[].image_name] | unique | length == length) and
-  all(.[].base_digest; test("^sha256:[0-9a-f]{64}$"))
+  all(.[];
+    (.base_tag == $fedora_version) and
+    (.base_digest | test("^sha256:[0-9a-f]{64}$"))
+  )
 ' "${variant_manifest}" >/dev/null
 
 live_variant="$(jq -er '.installer.live_variant' "${release_manifest}")"

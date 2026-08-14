@@ -32,11 +32,8 @@ if ! grep -Fq 'soltros help' "${motd}"; then
     failures=$((failures + 1))
 fi
 
-layout_line="$(grep -nF "printf 'layout=none\\n' > /etc/kernel/install.conf" "${kernel_script}" | cut -d: -f1)"
-install_line="$(grep -nF "dnf5 install -y \"\${kernel_package}\"" "${kernel_script}" | cut -d: -f1)"
-restore_line="$(grep -nF 'rm -f /etc/kernel/install.conf' "${kernel_script}" | tail -n 1 | cut -d: -f1)"
-if [[ -z "${layout_line}" || -z "${install_line}" || -z "${restore_line}" ]] ||
-    (( layout_line >= install_line || restore_line <= install_line )); then
+if ! grep -Fq "KERNEL_INSTALL_BYPASS=1 dnf5 install -y \"\${kernel_package}\"" \
+    "${kernel_script}"; then
     printf 'kernel installation must suppress transaction-time initramfs generation\n' >&2
     failures=$((failures + 1))
 fi

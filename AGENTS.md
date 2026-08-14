@@ -43,7 +43,7 @@ SoltrOS Reborn is an immutable, gaming-oriented Fedora 44 bootc project with fou
 The canonical local KDE build is:
 
 ```bash
-podman build --build-arg DESKTOP_VARIANT=kde -t soltros-os .
+just build-image kde
 ```
 
 The other variants use the `base_image` and `id` values in `variants/desktop-variants.json`. Build the LiveISO only after the selected carrier image is available to rootful Podman:
@@ -58,7 +58,7 @@ When Podman is unavailable, validate shell syntax without executing privileged i
 find build_files system_files -type f -name '*.sh' -print0 | xargs -0 -n1 bash -n
 ```
 
-Review a generated image with `podman run --rm -it soltros-os` when a local image build is available. CI builds the full manifest matrix and then publishes a desktop-selectable Anaconda ISO from the KDE carrier image.
+Review a generated image with `podman run --rm -it localhost/soltros-reborn/soltros-os:dev` when a local image build is available. CI builds and smoke-tests the full manifest matrix. Publication and durable LiveISO release jobs remain disabled until both release manifest publication gates are enabled.
 
 ## IMPLEMENTATION CONVENTIONS
 

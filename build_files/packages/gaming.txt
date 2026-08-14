@@ -1,0 +1,5 @@
+corectrl
+gamemode
+goverlay
+mangohud
+steam-devices

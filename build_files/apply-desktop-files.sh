@@ -12,14 +12,13 @@ desktop_variant="${DESKTOP_VARIANT:-kde}"
 }
 mkdir -p "${target_root}"
 
-case "${desktop_variant}" in
-  kde|gnome|niri-dms|niri-noctalia)
-    ;;
-  *)
-    echo "Unsupported desktop variant: ${desktop_variant}" >&2
-    exit 1
-    ;;
-esac
+manifest="${SOLTROS_VARIANT_MANIFEST:-/ctx/desktop-variants.json}"
+if [[ ! -r "${manifest}" ]] ||
+    ! jq -e --arg id "${desktop_variant}" \
+      'any(.[]; .id == $id)' "${manifest}" >/dev/null; then
+  echo "Unsupported desktop variant: ${desktop_variant}" >&2
+  exit 1
+fi
 
 apply_layer() {
   local layer="$1"

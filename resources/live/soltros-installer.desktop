@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Install SoltrOS Reborn
+Comment=Install an embedded SoltrOS desktop without network access
+Exec=/usr/share/soltros/bin/live-install
+Icon=system-software-install
+Terminal=false
+Categories=System;Settings;

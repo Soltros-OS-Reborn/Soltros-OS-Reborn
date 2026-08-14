@@ -6,28 +6,26 @@
 
 Project repository: [Soltros-OS-Reborn/Soltros-OS-Reborn](https://github.com/Soltros-OS-Reborn/Soltros-OS-Reborn)
 
-The default container image is `ghcr.io/soltros-os-reborn/soltros-os:latest`.
+SoltrOS Reborn images have not been published yet. The registry paths below are
+reserved release targets and must not be treated as currently installable images.
 
 A gaming-optimized immutable Linux distribution based on Fedora bootc images, featuring MacBook hardware support, gaming enhancements, CachyOS kernel performance, and developer-friendly tools. Each desktop variant is built as a separate image so the immutable system never carries a second display manager or desktop stack.
 
 ## Desktop Variants
 
-| Variant | OCI image | Session and login path |
+| Variant | Planned OCI image | Session and login path |
 | --- | --- | --- |
 | KDE Plasma | `ghcr.io/soltros-os-reborn/soltros-os:latest` | Plasma Login Manager |
 | GNOME | `ghcr.io/soltros-os-reborn/soltros-os-gnome:latest` | GDM |
 | Niri + Dank Material Shell | `ghcr.io/soltros-os-reborn/soltros-os-niri-dms:latest` | greetd and DMS |
 | Niri + Noctalia | `ghcr.io/soltros-os-reborn/soltros-os-niri-noctalia:latest` | greetd and Noctalia |
 
-The source of truth for these variants is [`variants/desktop-variants.json`](variants/desktop-variants.json). The CI matrix builds and publishes every entry.
+The source of truth for these variants is [`variants/desktop-variants.json`](variants/desktop-variants.json). CI builds and smoke-tests every entry; publication remains gated by [`release/release.json`](release/release.json).
 
 *Inspired by [VenOS](https://github.com/Venefilyn/veneos) - bringing together the best of gaming and productivity.*
 
-If you are using an RPM-OSTree based system like Fedora Silverblue, Bazzite, Bluefin, etc., you can use ``bootc`` to quickly swap to it.
-```bash
-sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os:latest
-sudo systemctl reboot
-```
+Rebase commands will be published only after the Reborn packages, signatures,
+release channels, and rollback path have passed the release gate.
 
 # NOTICE:
 There has been an issue with policy.json not being generated correctly, resulting in an issue with bootc. This should now be fixed in future, fresh installed images as well as the ISO. However, if you are experiencing this issue on a current version of SoltrOS, please do the following or updating will not work:
@@ -115,12 +113,14 @@ Access to any Linux distribution's packages via containerized environments - all
 ### Installation
 
 #### Method 1: Rebase from existing Fedora Atomic
-```bash
-sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os:latest
-```
+
+This method is not available until the Reborn OCI images are published.
 
 #### Method 2: Fresh Installation
-Download the `soltros-live-installer` artifact from the GitHub Actions build, boot it, and select a desktop in the installer before choosing the target disk and user. The same ISO can install all four variants and requires network access to fetch the selected OCI image.
+The development installer currently exercises the Anaconda path. The release
+LiveISO will provide a complete offline live desktop and embed all four desktop
+variants. Network access will be optional and will update the selected image only
+after explicit user consent.
 
 ### First Boot Setup
 
@@ -162,7 +162,6 @@ sh /usr/share/soltros/bin/helper.sh install-homebrew         # Setup MacOS style
 sh /usr/share/soltros/bin/helper.sh install-nix              # Setup NixOS package manager via Determinite Systems tooling
 sh /usr/share/soltros/bin/helper.sh install-oh-my-zsh        # Setup Oh My Zsh plugins/tools for Zsh
 sh /usr/share/soltros/bin/helper.sh change-to-zsh            # Switch the current user from Bash to Zsh
-sh /usr/share/soltros/bin/helper.sh download-zsh-configs     # Download Derrik's Zshrc config
 ```
 
 ### System Configuration
@@ -215,13 +214,10 @@ Pre-configured settings include:
 
 ### Build locally
 ```bash
-podman build --build-arg DESKTOP_VARIANT=kde -t soltros-os .
-podman build --build-arg BASE_IMAGE=quay.io/fedora/fedora-silverblue \
-  --build-arg DESKTOP_VARIANT=gnome -t soltros-os-gnome .
-podman build --build-arg BASE_IMAGE=quay.io/fedora/fedora-bootc \
-  --build-arg DESKTOP_VARIANT=niri-dms -t soltros-os-niri-dms .
-podman build --build-arg BASE_IMAGE=quay.io/fedora/fedora-bootc \
-  --build-arg DESKTOP_VARIANT=niri-noctalia -t soltros-os-niri-noctalia .
+just build-image kde
+just build-image gnome
+just build-image niri-dms
+just build-image niri-noctalia
 ```
 
 ### Build the LiveISO
@@ -229,7 +225,15 @@ podman build --build-arg BASE_IMAGE=quay.io/fedora/fedora-bootc \
 disk_config/build-live-iso.sh output/liveiso
 ```
 
-The ISO is an Anaconda boot installer. Its `%pre` selector supports an optional `soltros.variant=<id>` kernel argument for automated VM testing, while normal users see the four desktop choices before installation.
+Release builds use `xz` SquashFS compression. For faster local LiveISO QA, set
+`LIVEISO_COMPRESSION=zstd`; the resulting media has the same runtime and
+installer behavior but uses more disk space.
+
+The LiveISO is a complete KDE live environment with all four deduplicated bootc
+payloads embedded for offline installation. An optional update is offered only
+after network and signature preflight succeeds and remains disabled by default.
+Recovery details are in [`docs/installer-recovery.md`](docs/installer-recovery.md),
+and the gated publication procedure is in [`docs/release.md`](docs/release.md).
 
 ## Server Image
 The SoltrOS Server Edition is still a work in progress. Server work will be tracked in this repository as the Reborn project develops.

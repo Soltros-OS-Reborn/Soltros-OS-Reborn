@@ -21,10 +21,6 @@ rm -rf /var/log/*
 # Clean dnf5 cache and repos that cause lint failures
 rm -rf /var/lib/dnf5/repos/*
 
-# Remove /usr/etc entirely as bootc doesn't support it
-# The signing script already copies to /etc/containers/policy.json
-rm -rf /usr/etc
-
 # Remove build artifacts
 rm -f /.nvimlog
 
@@ -45,7 +41,3 @@ mkdir -p /var/cache
 mkdir -p /var/log
 
 log "Cleanup completed"
-
-# Validate container and commit changes
-#bootc container lint
-#ostree container commit

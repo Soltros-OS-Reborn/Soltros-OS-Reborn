@@ -27,6 +27,7 @@ if [[ ! -f "${manifest}" ]] || ! jq -e '
         (.id | type == "string") and
         (.display_name | type == "string") and
         (.base_image | startswith("quay.io/fedora/")) and
+        (.base_digest | test("^sha256:[0-9a-f]{64}$")) and
         (.image_name | startswith("soltros-os")) and
         (.session | type == "string") and
         (.display_manager | type == "string")
@@ -102,7 +103,8 @@ done
 
 for variant in kde gnome niri-dms niri-noctalia; do
     target_root="${test_root}/${variant}"
-    DESKTOP_VARIANT="${variant}" "${overlay_script}" \
+    SOLTROS_VARIANT_MANIFEST="${manifest}" DESKTOP_VARIANT="${variant}" \
+      "${overlay_script}" \
         "${repo_root}/desktop_files" "${target_root}"
 
     case "${variant}" in
@@ -133,27 +135,32 @@ for variant in kde gnome niri-dms niri-noctalia; do
     esac
 done
 
-if DESKTOP_VARIANT=unknown "${overlay_script}" \
+if SOLTROS_VARIANT_MANIFEST="${manifest}" DESKTOP_VARIANT=unknown \
+    "${overlay_script}" \
     "${repo_root}/desktop_files" "${test_root}/unknown" >/dev/null 2>&1; then
     fail 'desktop file application must reject unknown variants'
 fi
 
-if ! grep -Fq 'variants/desktop-variants.json' "${workflow}" ||
+if ! grep -Fq 'release/generated/desktop-matrix.json' "${workflow}" ||
     ! grep -Fq "DESKTOP_VARIANT=\${{ matrix.desktop.id }}" "${workflow}" ||
-    ! grep -Fq "BASE_IMAGE=\${{ matrix.desktop.base_image }}" "${workflow}"; then
-    fail 'CI must generate its build matrix from the desktop variant manifest'
+    ! grep -Fq "BASE_REF=\${{ matrix.desktop.base_image }}@\${{ matrix.desktop.base_digest }}" "${workflow}"; then
+    fail 'CI must consume the generated digest-pinned desktop matrix'
 fi
 
 for image_name in $(jq -r '.[].image_name' "${manifest}"); do
     image_ref="ghcr.io/soltros-os-reborn/${image_name}"
     jq -e --arg image_ref "${image_ref}" \
-        '.transports.docker[$image_ref][0].type == "sigstoreSigned"' \
+        '.transports.docker[$image_ref][0].type == "sigstoreSigned" and
+         (.transports.docker[$image_ref][0].keyPaths | length >= 1)' \
         "${policy}" >/dev/null ||
         fail "signing policy is missing desktop image: ${image_ref}"
 done
 
-grep -Fq '/ctx/desktop-variants.json' "${signing_script}" ||
-    fail 'image signing setup must read the desktop variant manifest'
+grep -Fq '/ctx/policy.json' "${signing_script}" ||
+    fail 'image signing setup must install the generated trust policy'
+
+jq -e '.default[0].type == "insecureAcceptAnything"' "${policy}" >/dev/null ||
+    fail 'signing policy must preserve ordinary Podman, Toolbox, and Distrobox pulls'
 
 if [[ "${failures}" -ne 0 ]]; then
     exit 1

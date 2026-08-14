@@ -1,0 +1,9 @@
+[Unit]
+Description=Migrate SoltrOS user defaults without overwriting customizations
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/soltros/migrate-user-defaults.sh
+
+[Install]
+WantedBy=default.target

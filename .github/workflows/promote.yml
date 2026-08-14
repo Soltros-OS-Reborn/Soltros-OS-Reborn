@@ -1,0 +1,79 @@
+---
+name: Promote SoltrOS Reborn channel
+on:
+  workflow_dispatch:
+    inputs:
+      source_channel:
+        description: Signed source channel
+        required: true
+        type: choice
+        options: [dev, testing, stable]
+      target_channel:
+        description: Promotion target
+        required: true
+        type: choice
+        options: [testing, stable, latest]
+
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      enabled: ${{ steps.check.outputs.enabled }}
+      transition_allowed: ${{ steps.check.outputs.transition_allowed }}
+      matrix: ${{ steps.check.outputs.matrix }}
+      registry: ${{ steps.check.outputs.registry }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - id: check
+        env:
+          SOURCE_CHANNEL: ${{ inputs.source_channel }}
+          TARGET_CHANNEL: ${{ inputs.target_channel }}
+        run: |
+          enabled="$(jq -r '.publication.enabled and .publication.repository_ready' release/release.json)"
+          transition_allowed="$(jq -r --arg source "${SOURCE_CHANNEL}" --arg target "${TARGET_CHANNEL}" \
+            'any(.manual_transitions[]; .from == $source and .to == $target)' release/generated/channel-policy.json)"
+          {
+            echo "enabled=${enabled}"
+            echo "transition_allowed=${transition_allowed}"
+            echo "matrix=$(jq -c . release/generated/desktop-matrix.json)"
+            echo "registry=$(jq -er '.publication.registry' release/release.json)"
+          } >> "${GITHUB_OUTPUT}"
+
+  promote:
+    needs: gate
+    if: needs.gate.outputs.enabled == 'true' && needs.gate.outputs.transition_allowed == 'true'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.gate.outputs.matrix) }}
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+      - name: Verify and promote immutable digest
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+          IMAGE_REGISTRY: ${{ needs.gate.outputs.registry }}
+          IMAGE_NAME: ${{ matrix.desktop.image_name }}
+          SOURCE_CHANNEL: ${{ inputs.source_channel }}
+          TARGET_CHANNEL: ${{ inputs.target_channel }}
+        run: |
+          image="${IMAGE_REGISTRY}/${IMAGE_NAME}"
+          digest="$(skopeo inspect --format '{{.Digest}}' "docker://${image}:${SOURCE_CHANNEL}")"
+          cosign verify --key soltros.pub "${image}@${digest}"
+          skopeo copy --all "docker://${image}@${digest}" "docker://${image}:${TARGET_CHANNEL}"
+          cosign sign --yes --key env://COSIGN_PRIVATE_KEY "${image}@${digest}"
+          target_digest="$(skopeo inspect --format '{{.Digest}}' "docker://${image}:${TARGET_CHANNEL}")"
+          test "${target_digest}" = "${digest}"
+          cosign verify --key soltros.pub "${image}@${target_digest}"

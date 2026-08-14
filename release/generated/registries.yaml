@@ -1,0 +1,9 @@
+docker:
+  ghcr.io/soltros-os-reborn/soltros-os:
+    use-sigstore-attachments: true
+  ghcr.io/soltros-os-reborn/soltros-os-gnome:
+    use-sigstore-attachments: true
+  ghcr.io/soltros-os-reborn/soltros-os-niri-dms:
+    use-sigstore-attachments: true
+  ghcr.io/soltros-os-reborn/soltros-os-niri-noctalia:
+    use-sigstore-attachments: true

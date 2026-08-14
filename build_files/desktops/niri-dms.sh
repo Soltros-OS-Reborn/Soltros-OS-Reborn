@@ -10,5 +10,6 @@ dnf5 -y install dms dms-greeter danksearch dgop quickshell
 
 test -f /usr/lib/systemd/user/dms.service
 systemctl --global enable dms.service
+systemctl --global is-enabled --quiet dms.service
 rpm -q dms dms-greeter danksearch dgop quickshell
 echo "=== Niri with Dank Material Shell installed ==="

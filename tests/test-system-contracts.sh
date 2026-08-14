@@ -3,16 +3,16 @@
 set -euo pipefail
 
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-packages="${repo_root}/build_files/desktop-packages.sh"
+package_root="${repo_root}/build_files/packages"
 motd="${repo_root}/system_files/etc/motd"
 soltros="${repo_root}/system_files/usr/bin/soltros"
 failures=0
 
-if grep -Fq 'fwupd-plugin-flashrom' "${packages}"; then
+if rg -n -F 'fwupd-plugin-flashrom' "${package_root}" >/dev/null; then
     printf 'obsolete fwupd-plugin-flashrom package remains in the Fedora 44 package list\n' >&2
     failures=$((failures + 1))
 fi
-if ! grep -Eq '^[[:space:]]+flashrom$' "${packages}"; then
+if ! rg -l -x 'flashrom' "${package_root}" >/dev/null; then
     printf 'standalone flashrom package is missing from the Fedora 44 package list\n' >&2
     failures=$((failures + 1))
 fi

@@ -50,15 +50,19 @@ The desktop is selected at image build time rather than installed into a shared 
 
 The common layers contain gaming, hardware, networking, shell, and developer functionality. Each variant layer owns its desktop packages, display manager, portals, session defaults, and `/etc/skel` configuration. This prevents conflicting display-manager activation and makes rollback a property of the complete selected image.
 
+The base split is deliberate. Kinoite and Silverblue retain Fedora's native KDE
+and GNOME integration, while both Niri variants use the smaller Fedora bootc
+base and share the same Niri layer. Digest pins in the variant manifest keep the
+three base families reproducible; common SoltrOS build stages provide the shared
+runtime contract without forcing unrelated desktop payloads into one image.
+
 ### The Five-Layer Package Management Strategy
 
 SoltrOS implements what we call "Quintuple Package Management" - five complementary package systems that work together seamlessly:
 
 #### Layer 1: RPM-OSTree (System Foundation)
-```bash
-# Immutable base system with atomic updates
-sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os:latest
-```
+The signed `bootc switch` reference will be documented after the Reborn registry
+is published. Until then, planned registry paths are not installation commands.
 - Core system components
 - Kernel and drivers
 - Essential system services
@@ -174,17 +178,10 @@ sh /usr/share/soltros/bin/helper.sh setup-distrobox  # Development containers
 
 SoltrOS uses a sophisticated multi-stage build process:
 
-```dockerfile
-# Multi-stage build for efficiency
-ARG BASE_IMAGE=quay.io/fedora/fedora-kinoite
-FROM ${BASE_IMAGE}:44 AS ctx
-COPY build_files/ /ctx/
-COPY desktop_files/ /ctx/desktop-files/
-
-FROM ${BASE_IMAGE}:44 AS soltros
-RUN --mount=type=bind,from=ctx,source=/ctx,target=/ctx \
-    DESKTOP_VARIANT=$DESKTOP_VARIANT bash /ctx/build.sh
-```
+The canonical build inputs are generated from `release/release.json` and
+`variants/desktop-variants.json`. Use `just build-image <variant>` so the
+Fedora version, digest-pinned base image, kernel package, and generated trust
+assets remain a single reproducible configuration.
 
 #### Build Pipeline Components
 1. **Kernel Integration**: CachyOS kernel installation with fallbacks
@@ -197,11 +194,8 @@ RUN --mount=type=bind,from=ctx,source=/ctx,target=/ctx \
 
 SoltrOS implements comprehensive security measures:
 
-```bash
-# Sigstore-based container signing
-cosign sign --yes --key env://COSIGN_PRIVATE_KEY \
-  ghcr.io/soltros-os-reborn/soltros-os:latest
-```
+Container signing is enabled only by the release workflow after the Reborn
+registry and credentials are explicitly enabled in `release/release.json`.
 
 - **Container Signing**: All images signed with cosign
 - **Verification**: Automatic signature verification
@@ -310,26 +304,13 @@ Applications from all package managers integrate seamlessly:
 
 SoltrOS uses a modern container-native installation approach:
 
-1. **Start with Fedora Silverblue**: Download and install standard Fedora Silverblue
-2. **Switch to SoltrOS**: Run the bootc switch command
-3. **Reboot**: Complete gaming environment ready on first boot
-
-```bash
-# Simple installation process
-sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os:latest
-sudo systemctl reboot
-```
+Boot the offline LiveISO, select one of the four desktop variants, and complete
+locale, keyboard, timezone, storage, encryption, user, and hostname setup in the
+Anaconda Web UI. Network access is not required.
 
 ### Migration from Existing Systems
 
-```bash
-# From any Fedora Atomic system (Silverblue, Kinoite, etc.)
-sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os:latest
-sudo systemctl reboot
-
-# From traditional Fedora installations
-# Install Fedora Silverblue first, then switch to SoltrOS
-```
+Migration commands will be published only with signed Reborn image references.
 
 ### Backup and Rollback
 
@@ -361,11 +342,8 @@ For gamers seeking a Linux experience that just works, developers needing a stab
 ### Build Commands Reference
 
 ```bash
-# Container build
-podman build -t soltros-os .
-
-# Installation/switching to SoltrOS
-sudo bootc switch ghcr.io/soltros-os-reborn/soltros-os:latest
+# Manifest-driven container build
+just build-image kde
 
 # System management
 sh /usr/share/soltros/bin/helper.sh install-flatpaks    # Install applications

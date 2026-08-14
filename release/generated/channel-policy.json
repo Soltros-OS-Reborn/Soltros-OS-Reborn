@@ -1,0 +1,19 @@
+{
+  "automatic_channel": "dev",
+  "immutable_tag_prefix": "sha-",
+  "manual_transitions": [
+    {
+      "from": "dev",
+      "to": "testing"
+    },
+    {
+      "from": "testing",
+      "to": "stable"
+    },
+    {
+      "from": "stable",
+      "to": "latest"
+    }
+  ],
+  "schema_version": 1
+}

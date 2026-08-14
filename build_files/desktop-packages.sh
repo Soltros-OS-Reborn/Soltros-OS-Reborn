@@ -8,130 +8,30 @@ log() {
   echo "=== $* ==="
 }
 
-log "Installing RPM packages"
+package_manifest_root=/ctx/packages
+mapfile -t package_manifests < <(find "${package_manifest_root}" -type f -name '*.txt' -print | sort)
+if (( ${#package_manifests[@]} == 0 )); then
+    echo "No package manifests found in ${package_manifest_root}" >&2
+    exit 1
+fi
 
-log "Install layered applications"
-
-# Layered Applications
-LAYERED_PACKAGES=(
-    # Core system
-    fish
-    zsh
-    tailscale
-    ptyxis
-    papirus-icon-theme
-    lm_sensors
-    udisks2
-    udiskie
-    gimp
-    pipewire
-    pipewire-pulse
-    wireplumber
-    just
-    jq
-    nebula
-    pipewire-alsa
-    deja-dup
-    playerctl
-    linux-firmware*
-    pipewire-alsa 
-    pipewire-gstreamer
-    pipewire-jack-audio-connection-kit
-    pipewire-jack-audio-connection-kit-libs
-    pipewire-libs
-    pipewire-plugin-libcamera 
-    pipewire-pulseaudio
-    pipewire-utils
-    wireplumber
-    wireplumber-libs
-    bluez
-    bluez-cups
-    bluez-libs
-    bluez-obexd
-    xorg-x11-server-Xwayland
-    switcheroo-control
-    mesa-dri-drivers
-    mesa-filesystem
-    mesa-libEGL
-    mesa-libGL
-    mesa-libgbm
-    mesa-va-drivers
-    mesa-vulkan-drivers
-    fwupd
-    flashrom
-    fwupd-plugin-modem-manager
-    fwupd-plugin-uefi-capsule-data
-    libvirtd
-    
-    # Gaming & performance
-    gamemode
-    gamemode-devel
-    mangohud
-    goverlay
-    corectrl
-    steam-devices
-    # MacBook thermal management
-    thermald
-    
-    # Essential CLI tools
-    btop
-    ripgrep
-    fd-find
-    git-delta
-    
-    # System monitoring & hardware
-    nvtop
-    powertop
-    smartmontools
-    usbutils
-    pciutils
-    
-    # Development & container tools
-    buildah
-    skopeo
-    podman-compose
-    
-    # Network tools
-    iperf3
-    nmap
-    wireguard-tools
-    
-    # File system support
-    exfatprogs
-    ntfs-3g
-    btrfs-progs
-    
-    # GVFS and network file system support
-    gvfs
-    gvfs-smb
-    gvfs-fuse
-    gvfs-mtp
-    gvfs-gphoto2
-    gvfs-archive
-    gvfs-afp
-    gvfs-nfs
-    samba-client
-    cifs-utils
-    virt-manager
-
-    # Multimedia/audio
-    pipewire-utils
-    wireplumber
+mapfile -t layered_packages < <(
+    sed -e '/^[[:space:]]*$/d' "${package_manifests[@]}" | sort -u
 )
 
-dnf5 install --setopt=install_weak_deps=False --nogpgcheck --skip-unavailable -y "${LAYERED_PACKAGES[@]}"
+if (( ${#layered_packages[@]} == 0 )); then
+    echo 'Package manifests are empty' >&2
+    exit 1
+fi
 
-for required_package in fwupd flashrom; do
+dnf5 install --setopt=install_weak_deps=False -y "${layered_packages[@]}"
+
+for required_package in "${layered_packages[@]}"; do
     if ! rpm -q "${required_package}" >/dev/null; then
         echo "Required package was not installed: ${required_package}" >&2
         exit 1
     fi
 done
-
-#Enabling various services
-systemctl enable pipewire.service || true
-systemctl enable pipewire-pulse.service || true
-systemctl enable wireplumber.service || true
 
 log "Setting up DisplayPort audio suspend/resume fix"
 
@@ -145,6 +45,4 @@ else
     echo "Warning: DisplayPort audio resume script not found"
 fi
 
-# Remove Firefox to replace with Waterfox
-log "Removing Firefox in favor of Waterfox"
 dnf5 remove -y firefox firefox-* || true

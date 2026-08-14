@@ -2,10 +2,6 @@
 # SoltrOS: Shell Aliases Setup Script
 # Compatible with both bash and zsh
 
-# Detect shell
-[ -n "$BASH_VERSION" ] && shell="bash"
-[ -n "$ZSH_VERSION" ] && shell="zsh"
-
 # Setup conditional aliases for known tools
 for cmd in eza bat gio; do
   command -v "$cmd" >/dev/null && {
@@ -20,12 +16,18 @@ for cmd in eza bat gio; do
         alias l.='eza -d .*'
         alias l1='eza -1'
         ;;
-      gio)
-        alias dlsrcam='gio mount -s gphoto2 & wait $last_pid && gphoto2 --stdout --capture-movie | ffmpeg -i - -vcodec rawvideo -pix_fmt yuv420p -threads 0 -f v4l2 /dev/video0'
-        ;;
+      gio) ;;
     esac
   }
 done
+
+dlsrcam() {
+  gio mount -s gphoto2 &
+  mount_pid=$!
+  wait "$mount_pid"
+  gphoto2 --stdout --capture-movie |
+    ffmpeg -i - -vcodec rawvideo -pix_fmt yuv420p -threads 0 -f v4l2 /dev/video0
+}
 
 # Flatpak app aliases (SoltrOS default installs)
 alias code='flatpak run com.visualstudio.code'
@@ -40,4 +42,3 @@ alias osm_progress='osm_mp4 && osm_gif'
 
 # SoltrOS MOTD alias (just for fun)
 alias welcome='cat /etc/motd'
-

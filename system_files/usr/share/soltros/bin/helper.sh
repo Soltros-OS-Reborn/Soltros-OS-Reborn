@@ -6,6 +6,8 @@ set -euo pipefail
 
 SOLTROS_DATA_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly SOLTROS_DATA_DIR
+SOURCE_LOCK="${SOLTROS_DATA_DIR}/sources.lock.json"
+readonly SOURCE_LOCK
 
 # Colors for output
 RED='\033[0;31m'
@@ -50,12 +52,8 @@ INSTALL COMMANDS:
   install-multimedia      Install multimedia tools via Flatpak
   install-homebrew        Install the Homebrew package manager
   install-nix             Install the Nix package manager
-  setup-nixmanager        Add the nixmanager.sh script to ~/scripts for easy Nix use
-  add-helper              This adds the helper.sh alias to Bash to make it easier to access
-  download-appimages      Download Feishin and Ryubing to the ~/AppImages folder
   install-oh-my-zsh       Download and install the Oh My Zsh plugins/tools
   change-to-zsh           Swap shell to Zsh
-  download-zsh-configs    Download Derrik's Zshrc config
 
 SETUP COMMANDS:
   setup-git              Configure Git with user credentials and SSH signing
@@ -67,7 +65,11 @@ CONFIGURE COMMANDS:
   toggle-session         Toggle between X11 and Wayland sessions
 
 OTHER COMMANDS:
-  update                 Update the system (rpm-ostree, flatpaks, etc.)
+  status                 Show the current bootc deployment and desktop variant
+  update                 Update bootc, Flatpak applications, and containers
+  rollback               Select the previous bootc deployment
+  doctor                 Verify image, desktop, service, and trust contracts
+  report                 Print a redacted diagnostic report
   clean                  Clean up the system
   distrobox              Manage distrobox containers
   toolbox                Manage toolbox containers
@@ -85,8 +87,18 @@ list_commands() {
     echo "  install install-flatpaks install-dev-tools install-gaming install-multimedia"
     echo "  setup-git setup-cli setup-distrobox"
     echo "  enable-amdgpu-oc toggle-session"
-    echo "  update clean distrobox toolbox"
+    echo "  status update rollback doctor report clean distrobox toolbox"
     echo "  help list"
+}
+
+download_verified() {
+    local url="$1"
+    local expected_sha256="$2"
+    local output="$3"
+
+    curl --fail --location --retry 3 --output "${output}" "${url}"
+    printf '%s  %s\n' "${expected_sha256}" "${output}" | \
+        sha256sum --check --status
 }
 
 # ───────────────────────────────────────────────
@@ -142,10 +154,18 @@ install_dev_tools() {
 }
 
 install_homebrew() {
+    local commit expected_sha256 installer
+
     print_header "Setting up Homebrew"
-    if /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
-        # Add Homebrew to PATH (the installer usually tells you the correct path)
-        echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.bashrc
+    commit="$(jq -er '.homebrew_installer.commit' "${SOURCE_LOCK}")"
+    expected_sha256="$(jq -er '.homebrew_installer.script_sha256' "${SOURCE_LOCK}")"
+    installer="$(mktemp /tmp/soltros-homebrew-installer-XXXXXX)"
+    trap 'rm -f "${installer}"' RETURN
+    download_verified \
+        "https://raw.githubusercontent.com/Homebrew/install/${commit}/install.sh" \
+        "${expected_sha256}" "${installer}"
+    if /bin/bash "${installer}"; then
+        printf '%s\n' "eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\"" >> "${HOME}/.bashrc"
         print_success "Brew package manager installed!"
         echo "Please restart your terminal or run 'source ~/.bashrc' to use brew"
     else
@@ -155,10 +175,17 @@ install_homebrew() {
 }
 
 install_nix() {
+    local installer expected_sha256
+
     print_header "Setting up Nix via Determinite Nix installer."
-    if /bin/bash /nix/determinate-nix-installer.sh install
-        mkdir -p ~/.config/nixpkgs-soltros/
-        wget https://raw.githubusercontent.com/soltros/random-stuff/refs/heads/main/configs/flake.nix -O ~/.config/nixpkgs-soltros/flake.nix; then
+    installer=/nix/determinate-nix-installer.sh
+    expected_sha256="$(jq -er '.nix_installer.script_sha256' "${SOURCE_LOCK}")"
+    if [[ ! -f "${installer}" ]] ||
+        ! printf '%s  %s\n' "${expected_sha256}" "${installer}" | sha256sum --check --status; then
+        print_error "The pinned Nix installer is missing or invalid"
+        exit 1
+    fi
+    if /bin/bash "${installer}" install; then
         print_success "Successfully installed and enabled the Nix package manager on SoltrOS."
     else
         print_error "Failed to install and enable the Nix package manager on SoltrOS."
@@ -167,33 +194,21 @@ install_nix() {
 }
 
 setup_nixmanager() {
-    print_header "Setting up the nixmanager.sh script."
-    if mkdir -p ~/scripts/
-    cp /usr/share/soltros/bin/nixmanager.sh ~/scripts/
-    chmod +x ~/scripts/nixmanager.sh; then
-        print_success "nixmanager.sh installed! Please run sh ~/scripts/nixmanager.sh, or nixmanager in the Zsh shell!"
-    else
-        print_error "Failed to setup nixmanager.sh"
-        exit 1
-    fi
-}
-
-add_helper() {
-    local bashrc="$HOME/.bashrc"
-    local alias_cmd='alias helper="sh /usr/share/soltros/bin/helper.sh"'
-
-    # Check if the alias already exists
-    if grep -Fxq "$alias_cmd" "$bashrc"; then
-        echo "✓ Alias already exists in $bashrc"
-    else
-        echo "$alias_cmd" >> "$bashrc"
-        echo "✓ Alias added to $bashrc"
-    fi
+    print_success "nixmanager is already installed as /usr/bin/nixmanager"
 }
 
 install_oh_my_zsh() {
+    local commit expected_sha256 installer
+
     print_header "Setting up Oh My Zsh!"
-    if sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"; then
+    commit="$(jq -er '.oh_my_zsh_installer.commit' "${SOURCE_LOCK}")"
+    expected_sha256="$(jq -er '.oh_my_zsh_installer.script_sha256' "${SOURCE_LOCK}")"
+    installer="$(mktemp /tmp/soltros-oh-my-zsh-installer-XXXXXX)"
+    trap 'rm -f "${installer}"' RETURN
+    download_verified \
+        "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/${commit}/tools/install.sh" \
+        "${expected_sha256}" "${installer}"
+    if RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh "${installer}"; then
         print_success "Oh My Zsh! installed."
     else
         print_error "Failed to install Oh My Zsh"
@@ -207,16 +222,6 @@ change_to_zsh() {
         print_success "Changed from Bash to Zsh"
     else
         print_error "Failed to change from Bash to Zsh"
-        exit 1
-    fi
-}
-
-download_zsh_configs() {
-    if wget https://raw.githubusercontent.com/soltros/random-stuff/refs/heads/main/zsh/zshrc -O ~/.zshrc
-        git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions; then
-        print_success "Successfully downloaded Zshrc."
-    else
-        print_error "Failed to download Zshrc"
         exit 1
     fi
 }
@@ -235,20 +240,6 @@ install_gaming() {
         print_success "Gaming setup complete!"
     else
         print_error "Failed to install gaming applications"
-        exit 1
-    fi
-}
-
-download_appimages() {
-    print_header "Downloading AppImages"
-
-    print_info "Downloading AppImages..."
-    if mkdir -p ~/AppImages/; then
-        wget https://github.com/jeffvli/feishin/releases/download/v0.17.0/Feishin-0.17.0-linux-x86_64.AppImage -O ~/AppImages/Feishin-0.17.0-linux-x86_64.AppImage
-        wget https://git.ryujinx.app/api/v4/projects/1/packages/generic/Ryubing/1.3.2/ryujinx-1.3.2-x64.AppImage -O ~/AppImages/ryujinx-1.3.2-x64.AppImage
-        print_success AppImage files downloaded to ~/AppImages/
-    else
-        print_error "Failed to download AppImage files"
         exit 1
     fi
 }
@@ -280,8 +271,8 @@ soltros_setup_git() {
     print_header "Setting up Git configuration"
     
     print_info "Setting up Git config..."
-    read -p "Enter your Git username: " git_username
-    read -p "Enter your Git email: " git_email
+    read -r -p "Enter your Git username: " git_username
+    read -r -p "Enter your Git email: " git_email
 
     git config --global color.ui true
     git config --global user.name "$git_username"
@@ -296,7 +287,7 @@ soltros_setup_git() {
     cat "${HOME}/.ssh/id_ed25519.pub"
 
     git config --global gpg.format ssh
-    git config --global user.signingkey "key::$(cat ${HOME}/.ssh/id_ed25519.pub)"
+    git config --global user.signingkey "key::$(cat "${HOME}/.ssh/id_ed25519.pub")"
     git config --global commit.gpgSign true
 
     print_info "Setting up Git aliases..."
@@ -310,7 +301,7 @@ soltros_setup_git() {
 
     git config --global feature.manyFiles true
     git config --global init.defaultBranch main
-    git config --global core.excludesFile '~/.gitignore'
+    git config --global core.excludesFile "${HOME}/.gitignore"
     
     print_success "Git setup complete"
 }
@@ -333,20 +324,27 @@ soltros_setup_cli() {
     echo '[ -f "/usr/share/soltros/bling/defaults.fish" ]; source /usr/share/soltros/bling/defaults.fish' | tee "${HOME}/.config/fish/conf.d/soltros-defaults.fish" >/dev/null
     echo '[ -f "/usr/share/soltros/bling/defaults.sh" ] && . "/usr/share/soltros/bling/defaults.sh"' | tee "${HOME}/.bashrc.d/soltros-defaults.bashrc" "${HOME}/.zshrc.d/soltros-defaults.zshrc" >/dev/null
 
-    print_info "Downloading Fish plugins..."
-    wget -q https://github.com/edc/bass/raw/7296c6e70cf577a08a2a7d0e919e428509640e0f/functions/__bass.py -O "${HOME}/.config/fish/functions/__bass.py"
-    wget -q https://github.com/edc/bass/raw/7296c6e70cf577a08a2a7d0e919e428509640e0f/functions/bass.fish -O "${HOME}/.config/fish/functions/bass.fish"
-    wget -q https://github.com/garabik/grc/raw/4e1e9d7fdc9965c129f27d89c493d07f4b8307bb/grc.fish -O "${HOME}/.config/fish/conf.d/grc.fish"
+    print_info "Downloading verified Fish plugins..."
+    for asset in bass_python bass_fish grc_fish; do
+        asset_url="$(jq -er --arg key "${asset}_url" '.shell_assets[$key]' "${SOURCE_LOCK}")"
+        asset_sha256="$(jq -er --arg key "${asset}_sha256" '.shell_assets[$key]' "${SOURCE_LOCK}")"
+        case "${asset}" in
+            bass_python) asset_target="${HOME}/.config/fish/functions/__bass.py" ;;
+            bass_fish) asset_target="${HOME}/.config/fish/functions/bass.fish" ;;
+            grc_fish) asset_target="${HOME}/.config/fish/conf.d/grc.fish" ;;
+        esac
+        download_verified "${asset_url}" "${asset_sha256}" "${asset_target}"
+    done
 
     print_info "Setting up Fish tools..."
-    echo '[ -f "${HOME}/.cargo/env.fish" ] && source "${HOME}/.cargo/env.fish"' | tee "${HOME}/.config/fish/conf.d/cargo-env.fish" >/dev/null
+    printf '%s\n' "[ -f \"\${HOME}/.cargo/env.fish\" ] && source \"\${HOME}/.cargo/env.fish\"" \
+        > "${HOME}/.config/fish/conf.d/cargo-env.fish"
 
-    ATUIN_INIT_FLAGS=${ATUIN_INIT_FLAGS:-"--disable-up-arrow"}
     for tool in starship atuin zoxide thefuck direnv; do
         if command -v "$tool" >/dev/null; then
             case "$tool" in
             atuin)
-                $tool init fish $ATUIN_INIT_FLAGS > "${HOME}/.config/fish/conf.d/${tool}.fish"
+                "$tool" init fish --disable-up-arrow > "${HOME}/.config/fish/conf.d/${tool}.fish"
                 ;;
             starship | zoxide)
                 $tool init fish > "${HOME}/.config/fish/conf.d/${tool}.fish"
@@ -371,15 +369,17 @@ soltros_setup_cli() {
             print_info "RC sourcing already configured for $shell"
         else
             # Add the snippet using printf to avoid parsing issues
-            printf '\n%s\n' "# User-specific aliases and functions" >> "$rc_file"
-            printf '%s\n' "if [ -d ~/${rc_dir} ]; then" >> "$rc_file"
-            printf '%s\n' "  for rc in ~/${rc_dir}/*; do" >> "$rc_file"
-            printf '%s\n' '    if [ -f "$rc" ]; then' >> "$rc_file"
-            printf '%s\n' '      . "$rc"' >> "$rc_file"
-            printf '%s\n' "    fi" >> "$rc_file"
-            printf '%s\n' "  done" >> "$rc_file"
-            printf '%s\n' "fi" >> "$rc_file"
-            printf '%s\n' "unset rc" >> "$rc_file"
+            {
+                printf '\n%s\n' "# User-specific aliases and functions"
+                printf '%s\n' "if [ -d ~/${rc_dir} ]; then"
+                printf '%s\n' "  for rc in ~/${rc_dir}/*; do"
+                printf '%s\n' "    if [ -f \"\$rc\" ]; then"
+                printf '%s\n' "      . \"\$rc\""
+                printf '%s\n' "    fi"
+                printf '%s\n' "  done"
+                printf '%s\n' "fi"
+                printf '%s\n' "unset rc"
+            } >> "$rc_file"
             print_info "Added RC sourcing for $shell"
         fi
     done
@@ -441,7 +441,7 @@ soltros_enable_amdgpu_oc() {
 toggle_session() {
     print_header "Session Toggle Information"
     
-    current_session=$(echo $XDG_SESSION_TYPE)
+    current_session="${XDG_SESSION_TYPE:-unknown}"
     print_info "Current session: $current_session"
     
     if [ "$current_session" = "wayland" ]; then
@@ -462,30 +462,6 @@ toggle_session() {
 # ───────────────────────────────────────────────
 # UNIVERSAL BLUE FUNCTIONS
 # ───────────────────────────────────────────────
-
-ublue_update() {
-    print_header "Updating the system"
-    
-    print_info "Updating rpm-ostree..."
-    sudo rpm-ostree upgrade || true
-    
-    print_info "Updating Flatpaks..."
-    flatpak update -y || true
-    
-    if command -v distrobox &> /dev/null; then
-        print_info "Updating distrobox containers..."
-        distrobox upgrade --all || true
-    fi
-    
-    if command -v toolbox &> /dev/null; then
-        print_info "Updating toolbox containers..."
-        for container in $(toolbox list -c | tail -n +2 | awk '{print $2}'); do
-            toolbox run -c "$container" sudo dnf update -y || true
-        done
-    fi
-    
-    print_success "System update complete"
-}
 
 ublue_clean() {
     print_header "Cleaning up the system"
@@ -556,20 +532,11 @@ main() {
         "setup-nixmanager")
             setup_nixmanager
             ;;
-        "add-helper")
-            add_helper
-            ;;
         "install-oh-my-zsh")
             install_oh_my_zsh
             ;;
         "change-to-zsh")
             change_to_zsh
-            ;;
-        "download-zsh-configs")
-            download_zsh_configs
-            ;;
-        "download-appimages")
-            download_appimages
             ;;
         "setup-git")
             soltros_setup_git
@@ -586,8 +553,8 @@ main() {
         "toggle-session")
             toggle_session
             ;;
-        "update")
-            ublue_update
+        "status"|"update"|"rollback"|"doctor"|"report")
+            exec /usr/libexec/soltros/system.sh "$1"
             ;;
         "clean")
             ublue_clean

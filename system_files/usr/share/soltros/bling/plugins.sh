@@ -5,15 +5,14 @@
 [ -n "$ZSH_VERSION" ] && shell="zsh"
 
 # Common tool initialization
-ATUIN_INIT_FLAGS=${ATUIN_INIT_FLAGS:-"--disable-up-arrow"}
 for tool in starship atuin zoxide thefuck; do
   command -v "$tool" >/dev/null && {
     case "$tool" in
     atuin)
-      eval "$($tool init $shell $ATUIN_INIT_FLAGS)"
+      eval "$("$tool" init "$shell" --disable-up-arrow)"
       ;;
     starship | zoxide)
-      eval "$($tool init $shell)"
+      eval "$("$tool" init "$shell")"
       ;;
     thefuck)
       eval "$(thefuck --alias)"

@@ -7,17 +7,24 @@ log() {
 }
 
 DESTDIR="${1:-/out}"
-STARSHIP_VERSION="1.26.0"
-MBPFAN_VERSION="2.4.0"
+SOURCE_LOCK="${2:-/usr/share/soltros/sources.lock.json}"
+
+if [[ ! -r "${SOURCE_LOCK}" ]]; then
+  echo "Source lock is not readable: ${SOURCE_LOCK}" >&2
+  exit 1
+fi
+
+STARSHIP_VERSION="$(jq -er '.starship.version' "${SOURCE_LOCK}")"
+MBPFAN_VERSION="$(jq -er '.mbpfan.version' "${SOURCE_LOCK}")"
 
 case "$(uname -m)" in
   x86_64)
     STARSHIP_TARGET="x86_64-unknown-linux-gnu"
-    STARSHIP_SHA256="321f0dd7af8340a5f2e6a8fec6538a04f617486f9ec70d878f91c09cd8deef22"
+    STARSHIP_SHA256="$(jq -er '.starship.x86_64_unknown_linux_gnu_sha256' "${SOURCE_LOCK}")"
     ;;
   aarch64)
     STARSHIP_TARGET="aarch64-unknown-linux-musl"
-    STARSHIP_SHA256="dc30189378d2f2e287384e8a692d3f95ad1df64cf0e8c36aa9201516028aed6b"
+    STARSHIP_SHA256="$(jq -er '.starship.aarch64_unknown_linux_musl_sha256' "${SOURCE_LOCK}")"
     ;;
   *)
     echo "Unsupported architecture for the pinned Starship release: $(uname -m)" >&2
@@ -25,7 +32,7 @@ case "$(uname -m)" in
     ;;
 esac
 
-MBPFAN_SHA256="e1cdcffaba52be215ae40a8568949190866d500d6ae2a1e96b71ab5372f3580b"
+MBPFAN_SHA256="$(jq -er '.mbpfan.source_sha256' "${SOURCE_LOCK}")"
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
 

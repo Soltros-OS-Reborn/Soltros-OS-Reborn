@@ -1,0 +1,9 @@
+gvfs
+gvfs-afp
+gvfs-archive
+gvfs-fuse
+gvfs-gphoto2
+gvfs-mtp
+gvfs-nfs
+gvfs-smb
+virt-manager

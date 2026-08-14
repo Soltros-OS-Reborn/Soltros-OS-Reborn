@@ -1,24 +1,27 @@
-# Set base image and tag
-ARG BASE_IMAGE=quay.io/fedora/fedora-kinoite
-ARG TAG_VERSION=44
+ARG BASE_REF
+ARG FEDORA_VERSION
 ARG DESKTOP_VARIANT=kde
+ARG KERNEL_PACKAGE=kernel-cachyos
 
-FROM ${BASE_IMAGE}:${TAG_VERSION} AS third-party-tools
+FROM ${BASE_REF} AS third-party-tools
 RUN dnf5 -y install gcc make
 COPY build_files/third-party-tools.sh /usr/local/bin/third-party-tools.sh
+COPY release/sources.lock.json /usr/local/share/soltros/sources.lock.json
 RUN chmod 0755 /usr/local/bin/third-party-tools.sh && \
-    /usr/local/bin/third-party-tools.sh /out && \
+    /usr/local/bin/third-party-tools.sh /out /usr/local/share/soltros/sources.lock.json && \
     dnf5 clean all
 
 # Stage 1: context for scripts (not included in final image)
-FROM ${BASE_IMAGE}:${TAG_VERSION} AS ctx
+FROM ${BASE_REF} AS ctx
 COPY build_files/ /ctx/
 COPY desktop_files/ /ctx/desktop-files/
 COPY resources/soltros-gdm.png /ctx/desktop-files/gnome/usr/share/pixmaps/fedora-gdm-logo.png
 COPY variants/desktop-variants.json /ctx/desktop-variants.json
+COPY release/release.json /ctx/release.json
+COPY release/sources.lock.json /ctx/sources.lock.json
+COPY resources/policy.json /ctx/policy.json
+COPY release/generated/registries.yaml /ctx/registries.yaml
 COPY soltros.pub /ctx/soltros.pub
-COPY soltros.pub /etc/pki/containers/soltros.pub
-RUN chmod 644 /etc/pki/containers/soltros.pub
 
 # Change perms
 RUN chmod +x \
@@ -26,10 +29,10 @@ RUN chmod +x \
     /ctx/signing.sh \
     /ctx/overrides.sh \
     /ctx/cleanup.sh \
+    /ctx/kernel.sh \
+    /ctx/install-user-defaults.sh \
     /ctx/desktop-packages.sh \
     /ctx/apply-desktop-files.sh \
-    /ctx/gaming.sh \
-    /ctx/waterfox-installer.sh \
     /ctx/desktops/kde.sh \
     /ctx/desktops/gnome.sh \
     /ctx/desktops/niri-common.sh \
@@ -39,21 +42,23 @@ RUN chmod +x \
     /ctx/nix-package-manager.sh \
     /ctx/desktop-defaults.sh
 
-FROM ${BASE_IMAGE}:${TAG_VERSION} AS soltros-common
+FROM ${BASE_REF} AS soltros-common
 
-ARG BASE_IMAGE
+ARG BASE_REF
+ARG FEDORA_VERSION
+ARG KERNEL_PACKAGE
 
 # EXPLICIT DISTRO LABELS FOR BOOTC-IMAGE-BUILDER
 # These override any conflicting labels and force correct distro detection
 LABEL ostree.linux="fedora" \
-    org.opencontainers.image.version="44" \
+    org.opencontainers.image.version="${FEDORA_VERSION}" \
     distro.name="fedora" \
-    distro.version="44"
+    distro.version="${FEDORA_VERSION}"
 
 # Your custom branding (these won't interfere)
 LABEL org.opencontainers.image.title="SoltrOS Desktop" \
-    org.opencontainers.image.description="Gaming-ready Fedora 44 bootc image with MacBook support" \
-    org.opencontainers.image.vendor="Derrik"
+    org.opencontainers.image.description="Gaming-ready Fedora ${FEDORA_VERSION} bootc image with MacBook support" \
+    org.opencontainers.image.vendor="SoltrOS Reborn"
 
 # Copy static system configuration and branding
 COPY system_files/etc /etc
@@ -62,6 +67,9 @@ COPY --from=third-party-tools /out/usr /usr
 COPY repo_files/*.repo /etc/yum.repos.d/
 COPY repo_files/flatpaks /usr/share/soltros/flatpaks
 COPY variants/desktop-variants.json /usr/share/soltros/desktop-variants.json
+COPY release/release.json /usr/share/soltros/release.json
+COPY release/sources.lock.json /usr/share/soltros/sources.lock.json
+COPY soltros.pub /usr/share/pki/containers/soltros.pub
 COPY resources/soltros-watermark.png /usr/share/plymouth/themes/spinner/watermark.png
 
 # Create necessary directories for shell configurations
@@ -73,33 +81,6 @@ RUN dnf5 install -y distrobox jq
 # Install dnf5 plugins and setup CachyOS kernel repo
 RUN dnf5 -y install dnf5-plugins
 RUN dnf5 -y config-manager setopt "*cachyos*".priority=1
-
-# Remove default kernel packages and install CachyOS kernel
-RUN printf 'layout=none\n' > /etc/kernel/install.conf && \
-    dnf5 -y remove --no-autoremove kernel kernel-core kernel-modules kernel-modules-core kernel-modules-extra || true && \
-    echo "Installing CachyOS kernel..." && \
-    if dnf5 -y install kernel-cachyos; then \
-        echo "CachyOS kernel installed successfully"; \
-        echo "Installed CachyOS kernel packages:"; \
-        dnf5 list installed | grep cachyos || true; \
-    else \
-        echo "Failed to install kernel-cachyos, trying LTS version..."; \
-        if dnf5 -y install kernel-cachyos-lts; then \
-            echo "CachyOS LTS kernel installed successfully"; \
-        else \
-            echo "All CachyOS kernel installation attempts failed"; \
-            echo "Available CachyOS packages:"; \
-            dnf5 search kernel-cachyos || true; \
-            echo "Falling back to default kernel installation"; \
-            dnf5 -y install kernel kernel-core kernel-modules || true; \
-        fi; \
-    fi && \
-    echo "Final kernel verification:" && \
-    dnf5 list installed | grep -E "(kernel|cachyos)" || true && \
-    echo "Available kernel modules:" && \
-    ls -la /usr/lib/modules/ || true
-
-RUN rm -f /etc/kernel/install.conf
 
 # Get rid of Plymouth
 RUN dnf5 remove plymouth* -y && \
@@ -117,21 +98,22 @@ RUN dnf5 remove plymouth* -y && \
     dnf5 clean all
 
 # Mount and run build script from ctx stage
-ENV KERNEL_FLAVOR=cachyos
+ENV KERNEL_PACKAGE=${KERNEL_PACKAGE}
 RUN --mount=type=bind,from=ctx,source=/ctx,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
-    BASE_IMAGE=$BASE_IMAGE BUILD_PHASE=common bash /ctx/build.sh
+    BASE_IMAGE=$BASE_REF BUILD_PHASE=common bash /ctx/build.sh
 
 FROM soltros-common AS soltros
 
-ARG BASE_IMAGE
+ARG BASE_REF
 ARG DESKTOP_VARIANT
 
 LABEL org.soltros.desktop="${DESKTOP_VARIANT}"
 
 RUN --mount=type=bind,from=ctx,source=/ctx,target=/ctx \
     --mount=type=tmpfs,dst=/tmp \
-    BASE_IMAGE=$BASE_IMAGE DESKTOP_VARIANT=$DESKTOP_VARIANT BUILD_PHASE=desktop bash /ctx/build.sh
+    BASE_IMAGE=$BASE_REF DESKTOP_VARIANT=$DESKTOP_VARIANT BUILD_PHASE=desktop bash /ctx/build.sh
 
 # Ensure bootc compatibility
+RUN bootc container lint
 RUN ostree container commit

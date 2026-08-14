@@ -1,0 +1,16 @@
+btrfs-progs
+cifs-utils
+exfatprogs
+flashrom
+fwupd
+fwupd-plugin-modem-manager
+fwupd-plugin-uefi-capsule-data
+linux-firmware
+ntfs-3g
+nvtop
+pciutils
+powertop
+samba-client
+smartmontools
+thermald
+usbutils

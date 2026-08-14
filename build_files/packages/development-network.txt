@@ -1,0 +1,10 @@
+buildah
+distrobox
+fd-find
+git-delta
+iperf3
+nmap
+podman-compose
+ripgrep
+skopeo
+wireguard-tools

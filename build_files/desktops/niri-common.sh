@@ -24,6 +24,7 @@ dnf5 -y install \
 systemctl disable gdm.service plasmalogin.service sddm.service 2>/dev/null || true
 systemctl enable greetd.service
 systemctl set-default graphical.target
+systemctl is-enabled --quiet greetd.service
 
 rpm -q greetd niri xdg-desktop-portal-gnome xwayland-satellite
 log "Shared Niri session installed"

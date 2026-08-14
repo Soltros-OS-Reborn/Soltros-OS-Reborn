@@ -21,16 +21,3 @@ zsh)
   [ -f "/usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ] && . "/usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
   ;;
 esac
-
-# Start fish if we're in zsh
-# That way we can set fish as default shell while still POSIX-compliant
-case "$shell" in
-zsh)
-  command -v "$cmd" >/dev/null && {
-      if [[ $(ps -o command= -p "$PPID" | awk '{print $1}') != 'fish' ]]
-      then
-          exec fish -l
-      fi
-  }
-  ;;
-esac

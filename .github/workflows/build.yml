@@ -1,5 +1,5 @@
 ---
-name: Build and Push SoltrOS Image
+name: Build SoltrOS Reborn
 on:
   pull_request:
     branches:
@@ -17,21 +17,42 @@ env:
   IMAGE_DESC: "Gaming-optimized immutable Linux distribution based on Fedora with MacBook support, gaming enhancements, and CachyOS kernel performance"
   IMAGE_KEYWORDS: "bootc,ublue,universal-blue,gaming,cachyos,macbook,fedora,immutable"
   IMAGE_LOGO_URL: "https://avatars.githubusercontent.com/u/120078124?s=200&v=4"
-  IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
-  DEFAULT_TAG: "latest"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
+  validate:
+    name: Validate source contracts
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Install validation dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes jq just shellcheck
+
+      - name: Run validation gate
+        run: just validate
+
   prepare:
     name: Prepare desktop matrix
+    needs: validate
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     outputs:
       desktop_matrix: ${{ steps.matrix.outputs.desktop_matrix }}
+      default_tag: ${{ steps.release.outputs.default_tag }}
+      fedora_version: ${{ steps.release.outputs.fedora_version }}
+      image_registry: ${{ steps.release.outputs.image_registry }}
+      kernel_package: ${{ steps.release.outputs.kernel_package }}
+      publish_enabled: ${{ steps.release.outputs.publish_enabled }}
     steps:
       - name: Checkout source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -39,8 +60,21 @@ jobs:
       - name: Generate desktop matrix
         id: matrix
         run: |
-          desktop_matrix="$(jq -c '{desktop: .}' variants/desktop-variants.json)"
+          tools/generate-release-assets.sh --check
+          desktop_matrix="$(jq -c . release/generated/desktop-matrix.json)"
           echo "desktop_matrix=${desktop_matrix}" >> "$GITHUB_OUTPUT"
+
+      - name: Load release configuration
+        id: release
+        run: |
+          enabled="$(jq -r '.publication.enabled and .publication.repository_ready' release/release.json)"
+          {
+            echo "default_tag=$(jq -er '.channels.development' release/release.json)"
+            echo "fedora_version=$(jq -er '.product.fedora_version' release/release.json)"
+            echo "image_registry=$(jq -er '.publication.registry' release/release.json)"
+            echo "kernel_package=$(jq -er '.kernel.package' release/release.json)"
+            echo "publish_enabled=${enabled}"
+          } >> "$GITHUB_OUTPUT"
 
   build_push:
     name: Build ${{ matrix.desktop.display_name }} image
@@ -51,6 +85,8 @@ jobs:
       matrix: ${{ fromJson(needs.prepare.outputs.desktop_matrix) }}
 
     env:
+      DEFAULT_TAG: ${{ needs.prepare.outputs.default_tag }}
+      IMAGE_REGISTRY: ${{ needs.prepare.outputs.image_registry }}
       IMAGE_NAME: ${{ matrix.desktop.image_name }}
 
     permissions:
@@ -85,10 +121,7 @@ jobs:
         id: metadata
         with:
           tags: |
-            type=raw,value=${{ env.DEFAULT_TAG }}
-            type=raw,value=${{ env.DEFAULT_TAG }}.{{date 'YYYYMMDD'}}
-            type=raw,value={{date 'YYYYMMDD'}}
-            type=sha,enable=${{ github.event_name == 'pull_request' }}
+            type=raw,value=sha-${{ github.sha }}
             type=ref,event=pr
           labels: |
             io.artifacthub.package.readme-url=https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/refs/heads/main/README.md
@@ -120,10 +153,31 @@ jobs:
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
           build-args: |
-            BASE_IMAGE=${{ matrix.desktop.base_image }}
+            BASE_REF=${{ matrix.desktop.base_image }}@${{ matrix.desktop.base_digest }}
             DESKTOP_VARIANT=${{ matrix.desktop.id }}
-            TAG_VERSION=44
+            FEDORA_VERSION=${{ needs.prepare.outputs.fedora_version }}
+            KERNEL_PACKAGE=${{ needs.prepare.outputs.kernel_package }}
           oci: false
+
+      - name: Inspect and smoke-test image
+        env:
+          BUILT_IMAGE: ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+        run: |
+          podman inspect "${BUILT_IMAGE}" >/dev/null
+          podman run --rm "${BUILT_IMAGE}" bootc container lint
+
+      - name: Generate image SPDX and provenance
+        env:
+          BUILT_IMAGE: ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+        run: tools/generate-image-artifacts.sh "${BUILT_IMAGE}" image-artifacts
+
+      - name: Upload image metadata
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: image-metadata-${{ matrix.desktop.id }}-${{ github.sha }}
+          path: image-artifacts/*
+          if-no-files-found: error
+          retention-days: 30
 
       # Rechunker disabled temporarily due to image reference issues
       # - name: Run Rechunker
@@ -146,7 +200,7 @@ jobs:
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: needs.prepare.outputs.publish_enabled == 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -154,7 +208,7 @@ jobs:
 
       - name: Push To GHCR
         uses: redhat-actions/push-to-registry@5ed88d269cf581ea9ef6dd6806d01562096bee9c # v2
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: needs.prepare.outputs.publish_enabled == 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         id: push
         env:
           REGISTRY_USER: ${{ github.actor }}
@@ -162,16 +216,16 @@ jobs:
         with:
           registry: ${{ env.IMAGE_REGISTRY }}
           image: ${{ env.IMAGE_NAME }}
-          tags: ${{ steps.metadata.outputs.tags }}
+          tags: sha-${{ github.sha }}
           username: ${{ env.REGISTRY_USER }}
           password: ${{ env.REGISTRY_PASSWORD }}
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: needs.prepare.outputs.publish_enabled == 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
 
       - name: Sign container image
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: needs.prepare.outputs.publish_enabled == 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         env:
           DIGEST: ${{ steps.push.outputs.digest }}
           COSIGN_EXPERIMENTAL: false
@@ -179,25 +233,49 @@ jobs:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: |
           IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
-          cosign sign -y --key env://COSIGN_PRIVATE_KEY $IMAGE_FULL@${{ env.DIGEST }}
+          sbom_file="$(find image-artifacts -type f -name '*.spdx.json' -print -quit)"
+          provenance_file="$(find image-artifacts -type f -name '*.provenance.json' -print -quit)"
+          jq '.predicate' "${provenance_file}" > /tmp/soltros-provenance-predicate.json
+          cosign sign -y --key env://COSIGN_PRIVATE_KEY "${IMAGE_FULL}@${DIGEST}"
+          cosign verify --key soltros.pub "${IMAGE_FULL}@${DIGEST}"
+          cosign attest --yes --key env://COSIGN_PRIVATE_KEY --type spdxjson --predicate "${sbom_file}" "${IMAGE_FULL}@${DIGEST}"
+          cosign attest --yes --key env://COSIGN_PRIVATE_KEY --type slsaprovenance --predicate /tmp/soltros-provenance-predicate.json "${IMAGE_FULL}@${DIGEST}"
+          cosign verify-attestation --key soltros.pub --type spdxjson "${IMAGE_FULL}@${DIGEST}"
+          cosign verify-attestation --key soltros.pub --type slsaprovenance "${IMAGE_FULL}@${DIGEST}"
+
+      - name: Promote verified image to development channel
+        if: needs.prepare.outputs.publish_enabled == 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}"
+          skopeo copy --all "docker://${IMAGE_FULL}@${DIGEST}" "docker://${IMAGE_FULL}:${DEFAULT_TAG}"
+          cosign verify --key soltros.pub "${IMAGE_FULL}@${DIGEST}"
 
   build_iso:
     name: Build desktop-selectable LiveISO
-    needs: build_push
-    if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    needs: [prepare, build_push]
+    if: needs.prepare.outputs.publish_enabled == 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: read
+      id-token: write
 
     steps:
       - name: Checkout source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+
       - name: Build LiveISO
         env:
-          IMAGE_REGISTRY: ${{ env.IMAGE_REGISTRY }}
-          IMAGE_TAG: ${{ env.DEFAULT_TAG }}
+          IMAGE_REGISTRY: ${{ needs.prepare.outputs.image_registry }}
+          IMAGE_TAG: ${{ needs.prepare.outputs.default_tag }}
+          COSIGN: cosign
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
         run: disk_config/build-live-iso.sh artifacts
 
       - name: Upload LiveISO
@@ -205,7 +283,8 @@ jobs:
         with:
           name: soltros-live-installer-${{ github.sha }}
           path: |
-            artifacts/*.iso
-            artifacts/*.sha256
+            artifacts/**/*.iso
+            artifacts/**/*.sha256
+            artifacts/**/release-artifacts/*
           if-no-files-found: error
           retention-days: 14

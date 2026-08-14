@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "bootc_image_builder": {
+    "image": "quay.io/centos-bootc/bootc-image-builder",
+    "digest": "sha256:afeffdb5a7ab6bb9d0593b5765412c4d821a9492dbaf26bb5a494e27181d2019"
+  },
+  "live_media_builder": {
+    "image": "quay.io/fedora/fedora",
+    "digest": "sha256:797c691972d3d82481a7325b37dcce30db41b1e8661117b7dc7948052eb0cb0c",
+    "packages": [
+      "lorax-lmc-novirt"
+    ]
+  },
+  "actionlint": {
+    "version": "1.7.7",
+    "linux_amd64_sha256": "023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757",
+    "linux_arm64_sha256": "401942f9c24ed71e4fe71b76c7d638f66d8633575c4016efd2977ce7c28317d0"
+  },
+  "starship": {
+    "version": "1.26.0",
+    "x86_64_unknown_linux_gnu_sha256": "321f0dd7af8340a5f2e6a8fec6538a04f617486f9ec70d878f91c09cd8deef22",
+    "aarch64_unknown_linux_musl_sha256": "dc30189378d2f2e287384e8a692d3f95ad1df64cf0e8c36aa9201516028aed6b"
+  },
+  "mbpfan": {
+    "version": "2.4.0",
+    "source_sha256": "e1cdcffaba52be215ae40a8568949190866d500d6ae2a1e96b71ab5372f3580b"
+  },
+  "nix_installer": {
+    "version": "3.21.9",
+    "script_sha256": "ed6067b13423cfd36c50e5b156b9e08eb3a7bea4dde8cb1c8d997d757b37b7f6"
+  },
+  "homebrew_installer": {
+    "commit": "a34ae4ee9151cbce4c3b33bca7043a972b7ae9a5",
+    "script_sha256": "12479a24be3f5307eecac7cde670fad7118640f031229e964f544b1367b52a41"
+  },
+  "oh_my_zsh_installer": {
+    "commit": "b54a71977574cfcf659cc2f15a5e6422f17a8da7",
+    "script_sha256": "95118b50d062198597e2b73d3a57b609fd95ca68cdc86faf4460d955f0172b61"
+  },
+  "shell_assets": {
+    "bass_python_url": "https://raw.githubusercontent.com/edc/bass/7296c6e70cf577a08a2a7d0e919e428509640e0f/functions/__bass.py",
+    "bass_python_sha256": "3f6d3495772e0ec52e15924cd9bb4c3eec87ef13e45ef2272a7aa2e4797bc9cc",
+    "bass_fish_url": "https://raw.githubusercontent.com/edc/bass/7296c6e70cf577a08a2a7d0e919e428509640e0f/functions/bass.fish",
+    "bass_fish_sha256": "d57689dba98e3228049618f352426aa59fd018f70697ab400639ef78b0eadef4",
+    "grc_fish_url": "https://raw.githubusercontent.com/garabik/grc/4e1e9d7fdc9965c129f27d89c493d07f4b8307bb/grc.fish",
+    "grc_fish_sha256": "17a9e172647cc6ee0d7e7cb8d90350bc075f746fa324995bfba926e111cc8349"
+  }
+}

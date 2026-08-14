@@ -1,0 +1,53 @@
+---
+name: Publish SoltrOS Reborn release
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: Successful build workflow run containing LiveISO artifacts
+        required: true
+        type: string
+      release_tag:
+        description: Durable GitHub release tag
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - name: Enforce publication gate
+        run: jq -e '.publication.enabled and .publication.repository_ready' release/release.json >/dev/null
+      - uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
+      - name: Download the selected successful build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_RUN_ID: ${{ inputs.build_run_id }}
+        run: |
+          test "$(gh run view "${BUILD_RUN_ID}" --json conclusion --jq .conclusion)" = success
+          gh run download "${BUILD_RUN_ID}" --dir release-download
+      - name: Verify and sign release payload
+        env:
+          COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          find release-download -type f -name '*.sha256' -print0 | while IFS= read -r -d '' checksum; do
+            (cd "$(dirname "${checksum}")" && sha256sum --check "$(basename "${checksum}")")
+          done
+          find release-download -type f -name '*.iso' -print0 | while IFS= read -r -d '' iso; do
+            cosign sign-blob --yes --key env://COSIGN_PRIVATE_KEY --output-signature "${iso}.sig" "${iso}"
+          done
+      - name: Publish durable GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          mapfile -d '' artifacts < <(find release-download -type f -print0)
+          gh release create "${RELEASE_TAG}" "${artifacts[@]}" \
+            --title "SoltrOS Reborn ${RELEASE_TAG}" \
+            --notes "Offline LiveISO, checksums, signatures, SPDX SBOMs, provenance, and embedded OCI inventory."

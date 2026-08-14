@@ -8,7 +8,6 @@ set -euo pipefail  # Exit on error, undefined vars, pipe failures
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
@@ -48,7 +47,6 @@ update_desktop_shortcuts() {
     
     # Determinate Nix installer paths
     local nix_profile_path="$HOME/.nix-profile"
-    local nix_var_path="/var/home/nix"
     
     # Update desktop database for Nix profile paths
     if command -v update-desktop-database &> /dev/null; then
@@ -58,7 +56,7 @@ update_desktop_shortcuts() {
         fi
         
         # Also update standard user directories
-        update-desktop-database ~/.local/share/applications/ 2>/dev/null || true
+        update-desktop-database "${HOME}/.local/share/applications/" 2>/dev/null || true
     fi
     
     # Update MIME database for Nix profile
@@ -66,7 +64,7 @@ update_desktop_shortcuts() {
         if [[ -d "$nix_profile_path/share/mime" ]]; then
             update-mime-database "$nix_profile_path/share/mime" 2>/dev/null || true
         fi
-        update-mime-database ~/.local/share/mime/ 2>/dev/null || true
+        update-mime-database "${HOME}/.local/share/mime/" 2>/dev/null || true
     fi
     
     # Update icon cache for Nix profile icons
@@ -75,11 +73,12 @@ update_desktop_shortcuts() {
             gtk-update-icon-cache -f -t "$nix_profile_path/share/icons/hicolor" 2>/dev/null || true
         fi
         # Standard icon paths
-        gtk-update-icon-cache -f -t ~/.local/share/icons/hicolor/ 2>/dev/null || true
+        gtk-update-icon-cache -f -t "${HOME}/.local/share/icons/hicolor/" 2>/dev/null || true
     fi
     
     # KDE Plasma specific updates
-    if [[ "$XDG_CURRENT_DESKTOP" == *"KDE"* ]] || [[ "$DESKTOP_SESSION" == *"plasma"* ]]; then
+    if [[ "${XDG_CURRENT_DESKTOP:-}" == *"KDE"* ]] ||
+        [[ "${DESKTOP_SESSION:-}" == *"plasma"* ]]; then
         # Force rebuild of KDE service cache to pick up new .desktop files
         if command -v kbuildsycoca5 &> /dev/null; then
             kbuildsycoca5 --noincremental 2>/dev/null || true
@@ -94,7 +93,7 @@ update_desktop_shortcuts() {
     fi
     
     # GNOME specific updates
-    if [[ "$XDG_CURRENT_DESKTOP" == *"GNOME"* ]]; then
+    if [[ "${XDG_CURRENT_DESKTOP:-}" == *"GNOME"* ]]; then
         # Update GNOME's application cache
         if command -v glib-compile-schemas &> /dev/null; then
             if [[ -d "$nix_profile_path/share/glib-2.0/schemas" ]]; then
@@ -113,12 +112,6 @@ update_desktop_shortcuts() {
         systemctl --user daemon-reload 2>/dev/null || true
     fi
     
-    # Send SIGHUP to update desktop environment
-    if command -v pkill &> /dev/null; then
-        # This can help refresh some desktop environments
-        pkill -HUP -f "gnome-shell\|plasmashell\|xfce4-panel" 2>/dev/null || true
-    fi
-    
     echo -e "${GREEN}✓ Desktop shortcuts updated for Nix profile${NC}"
 }
 
@@ -134,7 +127,7 @@ install_package() {
     
     echo -e "${BLUE}Installing package: $package${NC}"
     
-    if nix profile add "/var/home/soltros/.config/nixpkgs-soltros#$package"; then
+    if nix profile add "nixpkgs#${package}"; then
         echo -e "${GREEN}✓ Successfully installed: $package${NC}"
         update_desktop_shortcuts
     else
@@ -156,8 +149,7 @@ remove_package() {
 
     echo -e "${BLUE}Removing package: $package${NC}"
 
-    # Remove package by referencing local flake attribute path
-    if nix profile remove "/var/home/soltros/.config/nixpkgs-soltros#$package"; then
+    if nix profile remove "${package}"; then
         echo -e "${GREEN}✓ Successfully removed: $package${NC}"
         update_desktop_shortcuts
     else
@@ -214,18 +206,18 @@ main() {
     case "$command" in
         install)
             shift
-            install_package "$1"
+            install_package "${1:-}"
             ;;
         remove)
             shift
-            remove_package "$1"
+            remove_package "${1:-}"
             ;;
         list)
             list_packages
             ;;
         search)
             shift
-            search_packages "$1"
+            search_packages "${1:-}"
             ;;
         upgrade)
             upgrade_packages

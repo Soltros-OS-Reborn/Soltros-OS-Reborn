@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "product": {
+    "id": "soltros-reborn",
+    "name": "SoltrOS Reborn",
+    "release_name": "Electric Blue",
+    "release_version": "1",
+    "fedora_version": 44,
+    "architectures": [
+      "x86_64"
+    ]
+  },
+  "publication": {
+    "enabled": false,
+    "registry": "ghcr.io/soltros-os-reborn",
+    "repository_ready": false
+  },
+  "trust": {
+    "key_paths": [
+      "/usr/share/pki/containers/soltros.pub"
+    ]
+  },
+  "channels": {
+    "development": "dev",
+    "testing": "testing",
+    "stable": "stable",
+    "latest": "latest",
+    "default": "stable"
+  },
+  "kernel": {
+    "package": "kernel-cachyos",
+    "flavor": "cachyos"
+  },
+  "user_defaults": {
+    "version": 1
+  },
+  "installer": {
+    "live_variant": "kde",
+    "payload_path": "/usr/share/soltros/installer",
+    "offline_required": true,
+    "online_update_default": false,
+    "online_update_requires_consent": true
+  }
+}

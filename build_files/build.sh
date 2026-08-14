@@ -45,31 +45,30 @@ run_common_phase() {
   log "Enable container signing"
   echo_group /ctx/signing.sh
 
+  log "Install the required kernel"
+  echo_group /ctx/kernel.sh
+
   log "Setup /nix and download Determinite Systems Nix installer"
   echo_group /ctx/nix-package-manager.sh
 
-  log "Install Waterfox browser BIN"
-  echo_group /ctx/waterfox-installer.sh
-
   log "Install shared desktop packages"
   echo_group /ctx/desktop-packages.sh
-
-  log "Enable gaming enhancements"
-  echo_group /ctx/gaming.sh
 
   log "Apply system overrides"
   echo_group /ctx/overrides.sh
 }
 
 run_desktop_phase() {
-  case "${DESKTOP_VARIANT}" in
-    kde|gnome|niri-dms|niri-noctalia)
-      ;;
-    *)
-      echo "Unsupported desktop variant: ${DESKTOP_VARIANT}" >&2
-      exit 1
-      ;;
-  esac
+  if ! jq -e --arg id "${DESKTOP_VARIANT}" \
+      'any(.[]; .id == $id)' /ctx/desktop-variants.json >/dev/null; then
+    echo "Unsupported desktop variant: ${DESKTOP_VARIANT}" >&2
+    exit 1
+  fi
+
+  if [[ ! -x "/ctx/desktops/${DESKTOP_VARIANT}.sh" ]]; then
+    echo "Desktop build script is not executable: ${DESKTOP_VARIANT}" >&2
+    exit 1
+  fi
 
   log "Building desktop variant: $DESKTOP_VARIANT"
   log "Install ${DESKTOP_VARIANT} desktop variant"
@@ -84,6 +83,9 @@ EOF
   if command -v dconf >/dev/null 2>&1; then
     dconf update
   fi
+
+  log "Install versioned user defaults"
+  echo_group /ctx/install-user-defaults.sh
 
   log "Setup desktop defaults"
   echo_group /ctx/desktop-defaults.sh

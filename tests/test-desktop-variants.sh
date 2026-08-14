@@ -7,19 +7,21 @@ manifest="${repo_root}/variants/desktop-variants.json"
 dockerfile="${repo_root}/Dockerfile"
 build_entry="${repo_root}/build_files/build.sh"
 workflow="${repo_root}/.github/workflows/build.yml"
+renovate_config="${repo_root}/.github/renovate.json5"
 policy="${repo_root}/resources/policy.json"
 signing_script="${repo_root}/build_files/signing.sh"
 overlay_script="${repo_root}/build_files/apply-desktop-files.sh"
 test_root="$(mktemp -d /tmp/soltros-desktop-variants-XXXXXX)"
 trap 'rm -rf "${test_root}"' EXIT
 failures=0
+fedora_version="$(jq -er '.product.fedora_version | tostring' "${repo_root}/release/release.json")"
 
 fail() {
     printf '%s\n' "$1" >&2
     failures=$((failures + 1))
 }
 
-if [[ ! -f "${manifest}" ]] || ! jq -e '
+if [[ ! -f "${manifest}" ]] || ! jq -e --arg fedora_version "${fedora_version}" '
     length == 4 and
     ([.[].id] | sort == ["gnome", "kde", "niri-dms", "niri-noctalia"]) and
     ([.[].image_name] | unique | length == 4) and
@@ -27,6 +29,7 @@ if [[ ! -f "${manifest}" ]] || ! jq -e '
         (.id | type == "string") and
         (.display_name | type == "string") and
         (.base_image | startswith("quay.io/fedora/")) and
+        (.base_tag == $fedora_version) and
         (.base_digest | test("^sha256:[0-9a-f]{64}$")) and
         (.image_name | startswith("soltros-os")) and
         (.session | type == "string") and
@@ -34,6 +37,11 @@ if [[ ! -f "${manifest}" ]] || ! jq -e '
     )
 ' "${manifest}" >/dev/null 2>&1; then
     fail 'desktop variant manifest must define four complete, unique variants'
+fi
+
+if ! grep -Fq 'desktop-variants\\.json' "${renovate_config}" ||
+    ! grep -Fq 'currentDigest' "${renovate_config}"; then
+    fail 'Renovate must refresh digest-pinned Fedora desktop base images'
 fi
 
 for variant in kde gnome niri-dms niri-noctalia; do

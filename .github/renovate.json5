@@ -6,6 +6,19 @@
 
   "rebaseWhen": "never",
 
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^variants\\/desktop-variants\\.json$/"],
+      "matchStrings": [
+        "\\\"base_image\\\"\\s*:\\s*\\\"(?<depName>[^\\\"]+)\\\"\\s*,\\s*\\\"base_tag\\\"\\s*:\\s*\\\"(?<currentValue>[^\\\"]+)\\\"\\s*,\\s*\\\"base_digest\\\"\\s*:\\s*\\\"(?<currentDigest>sha256:[a-f0-9]{64})\\\"",
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "docker",
+      "autoReplaceStringTemplate": "\\\"base_image\\\": \\\"{{{depName}}}\\\",\\n    \\\"base_tag\\\": \\\"{{{newValue}}}\\\",\\n    \\\"base_digest\\\": \\\"{{{newDigest}}}\\\"",
+    },
+  ],
+
   "packageRules": [
     {
       "automerge": true,

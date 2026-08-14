@@ -112,7 +112,8 @@ jq -e '
   .update_ref == "ghcr.io/soltros-os-reborn/soltros-os:stable" and
   .build_id == "installer-test" and
   .installation_mode == "offline" and
-  .update_source_configured == false
+  .update_source_configured == false and
+  .oobe_required == true
 ' "${state_dir}/installation.json" >/dev/null
 
 grep -Fq 'ostreecontainer --url oci:/usr/share/soltros/installer/oci:kde' \
@@ -170,7 +171,8 @@ LIVEINST=/usr/bin/liveinst \
 jq -e '
   .variant == "kde" and
   .source_digest == "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" and
-  .installation_mode == "online"
+  .installation_mode == "online" and
+  .oobe_required == true
 ' "${state_dir}/installation.json" >/dev/null
 grep -Fq 'docker://ghcr.io/soltros-os-reborn/soltros-os:stable@sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee' \
   "${runtime_dir}/copy-command"

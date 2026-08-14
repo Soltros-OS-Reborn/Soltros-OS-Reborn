@@ -7,10 +7,13 @@ fish
 flatpak
 jq
 just
+gtk4
+libadwaita
 lm_sensors
 nebula
 papirus-icon-theme
 playerctl
+python3-gobject
 tailscale
 udisks2
 udiskie

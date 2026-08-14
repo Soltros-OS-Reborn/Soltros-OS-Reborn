@@ -1,4 +1,5 @@
 include "soltros-shell.kdl"
+spawn-at-startup "soltros-welcome" "--automatic"
 
 input {
     keyboard {

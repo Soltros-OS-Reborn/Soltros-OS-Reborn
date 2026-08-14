@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+
+set -euo pipefail
+
+exec /usr/bin/python3 /usr/share/soltros/oobe/main.py "$@"

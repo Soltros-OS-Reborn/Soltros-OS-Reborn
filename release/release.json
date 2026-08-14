@@ -33,7 +33,7 @@
     "flavor": "cachyos"
   },
   "user_defaults": {
-    "version": 1
+    "version": 2
   },
   "installer": {
     "live_variant": "kde",

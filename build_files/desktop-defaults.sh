@@ -21,3 +21,9 @@ systemctl is-enabled --quiet mbpfan.service
 log "Enable user-default migration"
 systemctl --global enable soltros-user-defaults.service
 systemctl --global is-enabled --quiet soltros-user-defaults.service
+
+log "Validate native first-login setup"
+rpm -q gtk4 libadwaita python3-gobject
+test -x /usr/bin/soltros-welcome
+test -f /etc/xdg/autostart/org.soltros.Welcome.desktop
+test -f /usr/share/applications/org.soltros.Welcome.desktop

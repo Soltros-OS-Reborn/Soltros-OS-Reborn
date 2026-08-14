@@ -101,6 +101,13 @@ download_verified() {
         sha256sum --check --status
 }
 
+ensure_flathub() {
+    if ! flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo; then
+        print_error "Failed to add Flathub repository"
+        return 1
+    fi
+}
+
 # ───────────────────────────────────────────────
 # INSTALL FUNCTIONS
 # ───────────────────────────────────────────────
@@ -121,10 +128,7 @@ soltros_install_flatpaks() {
     fi
     
     print_info "Setting up Flathub repository..."
-    if ! flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo; then
-        print_error "Failed to add Flathub repository"
-        exit 1
-    fi
+    ensure_flathub
     
     print_info "Installing applications from bundled Flatpak list..."
     if xargs --no-run-if-empty -a "${flatpak_list}" flatpak --system -y install --reinstall; then
@@ -137,7 +141,8 @@ soltros_install_flatpaks() {
 
 install_dev_tools() {
     print_header "Installing development tools via Flatpak"
-    
+
+    ensure_flathub
     print_info "Installing development tools..."
     if flatpak install -y flathub \
         com.visualstudio.code \
@@ -228,7 +233,8 @@ change_to_zsh() {
 
 install_gaming() {
     print_header "Installing gaming applications via Flatpak"
-    
+
+    ensure_flathub
     print_info "Installing gaming applications..."
     if flatpak install -y flathub \
         com.valvesoftware.Steam \
@@ -246,7 +252,8 @@ install_gaming() {
 
 install_multimedia() {
     print_header "Installing multimedia applications via Flatpak"
-    
+
+    ensure_flathub
     print_info "Installing multimedia applications..."
     if flatpak install -y flathub \
         org.audacityteam.Audacity \

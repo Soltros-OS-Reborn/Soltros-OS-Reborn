@@ -163,7 +163,8 @@ jq -n \
     update_ref: $update_ref,
     build_id: $build_id,
     installation_mode: $install_mode,
-    update_source_configured: false
+    update_source_configured: false,
+    oobe_required: true
   }' > "${metadata}"
 
 cat > "${kickstart}" <<EOF

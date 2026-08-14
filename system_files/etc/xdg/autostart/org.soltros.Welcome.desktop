@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Welcome to SoltrOS
+Comment=Complete first-login setup
+Exec=/usr/bin/soltros-welcome --automatic
+TryExec=/usr/bin/soltros-welcome
+Icon=preferences-system
+OnlyShowIn=GNOME;KDE;
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+X-KDE-autostart-after=panel

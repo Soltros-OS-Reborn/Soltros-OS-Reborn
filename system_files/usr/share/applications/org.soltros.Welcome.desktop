@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Welcome to SoltrOS
+Comment=Review and apply SoltrOS user setup
+Exec=/usr/bin/soltros-welcome
+TryExec=/usr/bin/soltros-welcome
+Icon=preferences-system
+Terminal=false
+Categories=Settings;
+Keywords=setup;welcome;first run;applications;shell;
+StartupNotify=true

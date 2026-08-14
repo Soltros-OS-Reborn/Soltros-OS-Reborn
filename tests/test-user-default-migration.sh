@@ -12,6 +12,10 @@ mkdir -p \
   "${fake_root}/usr/lib/soltros" \
   "${fake_root}/usr/share/soltros/defaults/niri-noctalia/.config/niri"
 cp "${repo_root}/release/release.json" "${fake_root}/usr/share/soltros/release.json"
+jq '.user_defaults.version = 1' "${fake_root}/usr/share/soltros/release.json" \
+  > "${fake_root}/usr/share/soltros/release.json.old"
+mv "${fake_root}/usr/share/soltros/release.json.old" \
+  "${fake_root}/usr/share/soltros/release.json"
 printf '%s\n' niri-noctalia > "${fake_root}/usr/lib/soltros/desktop-variant"
 printf '%s\n' 'version-one' > \
   "${fake_root}/usr/share/soltros/defaults/niri-noctalia/.config/niri/config.kdl"

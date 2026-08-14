@@ -18,6 +18,11 @@ grep -Fq 'grub2-efi-x64-cdboot' "${repo_root}/resources/live/packages.txt"
 grep -Fq 'shim-x64' "${repo_root}/resources/live/packages.txt"
 grep -Fq 'efi_grub_source=' "${prepare_root}"
 grep -Fq "install -m 0700 \"\${efi_grub_source}\" /boot/efi/EFI/fedora/gcdx64.efi" "${prepare_root}"
+if ! grep -Fq "kernel_source=\"/usr/lib/modules/\${kernel_version}/vmlinuz\"" "${prepare_root}" ||
+    ! grep -Fq "install -m 0644 \"\${kernel_source}\" \"/boot/vmlinuz-\${kernel_version}\"" "${prepare_root}"; then
+  printf 'LiveISO root preparation must stage the bootc kernel where Lorax can discover it\n' >&2
+  exit 1
+fi
 grep -Fq 'for loop_index in {0..7}; do' "${liveiso_builder}"
 grep -Fq 'LIVEISO_ROOTFS_IMAGE' "${liveiso_builder}"
 grep -Fq 'Insufficient free space for LiveISO build' "${liveiso_builder}"

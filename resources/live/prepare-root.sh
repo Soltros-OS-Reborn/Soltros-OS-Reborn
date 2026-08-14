@@ -32,6 +32,21 @@ for efi_file in BOOTX64.CSV mmx64.efi shim.efi shimx64.efi; do
     "/boot/efi/EFI/fedora/${efi_file}"
 done
 
+# Lorax discovers kernels only through versioned files under /boot.
+kernel_count=0
+while IFS= read -r kernel_version; do
+  kernel_source="/usr/lib/modules/${kernel_version}/vmlinuz"
+  if [[ ! -s "${kernel_source}" ]]; then
+    continue
+  fi
+  install -m 0644 "${kernel_source}" "/boot/vmlinuz-${kernel_version}"
+  ((kernel_count += 1))
+done < <(find /usr/lib/modules -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -V)
+if (( kernel_count == 0 )); then
+  echo 'No bootc kernel is available for the LiveISO boot tree' >&2
+  exit 1
+fi
+
 if ! id liveuser >/dev/null 2>&1; then
   useradd --create-home --groups wheel --shell /bin/bash liveuser
 fi

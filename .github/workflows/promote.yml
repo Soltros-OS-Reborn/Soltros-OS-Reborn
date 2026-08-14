@@ -25,7 +25,7 @@ jobs:
       matrix: ${{ steps.check.outputs.matrix }}
       registry: ${{ steps.check.outputs.registry }}
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
       - id: check
         env:
           SOURCE_CHANNEL: ${{ inputs.source_channel }}
@@ -53,8 +53,8 @@ jobs:
       packages: write
       id-token: write
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}

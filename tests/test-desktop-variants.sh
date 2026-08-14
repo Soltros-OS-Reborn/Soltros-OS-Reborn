@@ -11,6 +11,7 @@ renovate_config="${repo_root}/.github/renovate.json5"
 policy="${repo_root}/resources/policy.json"
 signing_script="${repo_root}/build_files/signing.sh"
 overlay_script="${repo_root}/build_files/apply-desktop-files.sh"
+rpmdb_repair_script="${repo_root}/build_files/repair-rpmdb.sh"
 test_root="$(mktemp -d /tmp/soltros-desktop-variants-XXXXXX)"
 trap 'rm -rf "${test_root}"' EXIT
 failures=0
@@ -57,12 +58,14 @@ if ! grep -Fq 'ARG DESKTOP_VARIANT=kde' "${dockerfile}" ||
     fail 'Dockerfile must pass the selected desktop variant into the build entry point'
 fi
 
-if ! grep -Fq 'rpm --rebuilddb' "${dockerfile}" ||
-    ! grep -Fq 'rpm --verifydb' "${dockerfile}" ||
-    ! grep -Fq "'filesystem(unmerged-sbin-symlinks)'" "${dockerfile}" ||
-    ! grep -Fq "'libuuid.so.1()(64bit)'" "${dockerfile}" ||
-    ! grep -Fq "'group(tss)'" "${dockerfile}"; then
-    fail 'Dockerfile must rebuild and validate RPM capability indexes before publication'
+if ! grep -Fq '/ctx/repair-rpmdb.sh' "${dockerfile}" ||
+    ! grep -Fq 'rpmdb --exportdb' "${rpmdb_repair_script}" ||
+    ! grep -Fq -- '--importdb' "${rpmdb_repair_script}" ||
+    ! grep -Fq -- '--verifydb' "${rpmdb_repair_script}" ||
+    ! grep -Fq "'filesystem(unmerged-sbin-symlinks)'" "${rpmdb_repair_script}" ||
+    ! grep -Fq "'libuuid.so.1()(64bit)'" "${rpmdb_repair_script}" ||
+    ! grep -Fq "'group(tss)'" "${rpmdb_repair_script}"; then
+    fail 'Image builds must repair and validate RPM capability indexes before publication'
 fi
 
 grep -Fq 'FROM soltros-common AS soltros' "${dockerfile}" ||

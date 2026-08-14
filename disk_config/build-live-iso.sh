@@ -115,8 +115,10 @@ if [[ -n "${existing_rootfs}" ]]; then
   rootfs_allocated_bytes="$(( $(stat --format='%b' "${existing_rootfs}") * 512 ))"
   required_free_bytes="$(( rootfs_allocated_bytes * 2 + 21474836480 ))"
 else
-  payload_allocated_bytes="$(du -s --block-size=1 "${payload_dir}" 2>/dev/null | awk '{ print $1 }')"
-  payload_allocated_bytes="${payload_allocated_bytes:-0}"
+  payload_allocated_bytes=0
+  if [[ -d "${payload_dir}" ]]; then
+    payload_allocated_bytes="$(du -s --block-size=1 "${payload_dir}" | awk '{ print $1 }')"
+  fi
   required_free_bytes="$(( payload_allocated_bytes * 3 + 64424509440 ))"
 fi
 if [[ -n "${minimum_free_bytes}" ]]; then

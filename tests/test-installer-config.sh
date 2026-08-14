@@ -38,6 +38,26 @@ grep -Fq 'firefox' "${repo_root}/resources/live/packages.txt"
 grep -Fq 'lshw' "${repo_root}/resources/live/packages.txt"
 grep -Fq 'buildah from' "${liveiso_builder}"
 
+mkdir -p "${test_root}/bin" "${test_root}/artifacts"
+cat > "${test_root}/bin/sudo" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "${SUDO_LOG:?}"
+exit 73
+EOF
+chmod 0755 "${test_root}/bin/sudo"
+
+set +e
+PATH="${test_root}/bin:${PATH}" \
+SUDO_LOG="${test_root}/sudo.log" \
+IMAGE_REGISTRY=registry.example.test/soltros \
+LIVEISO_MIN_FREE_BYTES=1 \
+  "${liveiso_builder}" "${test_root}/artifacts" >"${test_root}/liveiso.log" 2>&1
+liveiso_status=$?
+set -e
+test "${liveiso_status}" -eq 73
+grep -Fq 'podman pull registry.example.test/soltros/soltros-os:dev' \
+  "${test_root}/sudo.log"
+
 grep -Fq 'catalog.json' "${repo_root}/resources/live-install.sh"
 grep -Fq "online 'Use the newest signed stable image' off" \
   "${repo_root}/resources/live-install.sh"

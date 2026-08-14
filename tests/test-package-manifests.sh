@@ -29,7 +29,7 @@ for forbidden_package in gimp gamemode-devel libvirtd ptyxis; do
   fi
 done
 
-grep -Fq "rpm -q \"\${required_package}\"" "${installer}"
+grep -Fq "rpm -q --whatprovides \"\${required_package}\"" "${installer}"
 if rg -n -- '--nogpgcheck|--skip-unavailable' "${installer}" >/dev/null; then
   echo 'package installation bypasses a required integrity check' >&2
   exit 1

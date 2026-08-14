@@ -27,7 +27,7 @@ fi
 dnf5 install --setopt=install_weak_deps=False -y "${layered_packages[@]}"
 
 for required_package in "${layered_packages[@]}"; do
-    if ! rpm -q "${required_package}" >/dev/null; then
+    if ! rpm -q --whatprovides "${required_package}" >/dev/null; then
         echo "Required package was not installed: ${required_package}" >&2
         exit 1
     fi

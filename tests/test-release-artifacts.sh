@@ -73,7 +73,7 @@ test -s "${bundle}"
 jq -e --arg bundle "$(basename "${bundle}")" \
   '.iso.signature == $bundle and (.artifacts | index($bundle)) != null' \
   "${signed_artifacts}/release-index.json" >/dev/null
-grep -Fq 'sign-blob --yes --key env://COSIGN_PRIVATE_KEY --bundle' "${cosign_log}"
+grep -Fq 'sign-blob --use-signing-config=false --yes --key env://COSIGN_PRIVATE_KEY --bundle' "${cosign_log}"
 grep -Fq 'verify-blob --key' "${cosign_log}"
 
 printf 'PASS: LiveISO release artifact set contains checksum, Sigstore bundle hook, SPDX, provenance, and inventory\n'

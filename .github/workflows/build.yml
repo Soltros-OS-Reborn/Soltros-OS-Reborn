@@ -236,10 +236,10 @@ jobs:
           sbom_file="$(find image-artifacts -type f -name '*.spdx.json' -print -quit)"
           provenance_file="$(find image-artifacts -type f -name '*.provenance.json' -print -quit)"
           jq '.predicate' "${provenance_file}" > /tmp/soltros-provenance-predicate.json
-          cosign sign --new-bundle-format=false -y --key env://COSIGN_PRIVATE_KEY "${IMAGE_FULL}@${DIGEST}"
+          cosign sign --new-bundle-format=false --use-signing-config=false -y --key env://COSIGN_PRIVATE_KEY "${IMAGE_FULL}@${DIGEST}"
           cosign verify --new-bundle-format=false --key soltros.pub "${IMAGE_FULL}@${DIGEST}"
-          cosign attest --new-bundle-format=false --yes --key env://COSIGN_PRIVATE_KEY --type spdxjson --predicate "${sbom_file}" "${IMAGE_FULL}@${DIGEST}"
-          cosign attest --new-bundle-format=false --yes --key env://COSIGN_PRIVATE_KEY --type slsaprovenance --predicate /tmp/soltros-provenance-predicate.json "${IMAGE_FULL}@${DIGEST}"
+          cosign attest --new-bundle-format=false --use-signing-config=false --yes --key env://COSIGN_PRIVATE_KEY --type spdxjson --predicate "${sbom_file}" "${IMAGE_FULL}@${DIGEST}"
+          cosign attest --new-bundle-format=false --use-signing-config=false --yes --key env://COSIGN_PRIVATE_KEY --type slsaprovenance --predicate /tmp/soltros-provenance-predicate.json "${IMAGE_FULL}@${DIGEST}"
           cosign verify-attestation --new-bundle-format=false --key soltros.pub --type spdxjson "${IMAGE_FULL}@${DIGEST}"
           cosign verify-attestation --new-bundle-format=false --key soltros.pub --type slsaprovenance "${IMAGE_FULL}@${DIGEST}"
 

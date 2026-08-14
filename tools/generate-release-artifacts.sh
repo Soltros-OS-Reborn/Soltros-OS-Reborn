@@ -58,7 +58,7 @@ jq -S -n \
   > "${artifact_dir}/release-index.json"
 
 if [[ -n "${COSIGN_PRIVATE_KEY:-}" && -n "${COSIGN_PASSWORD:-}" && -n "${COSIGN:-}" ]]; then
-  "${COSIGN}" sign-blob --yes --key env://COSIGN_PRIVATE_KEY --bundle "${artifact_dir}/${iso_name}.sigstore.json" "${iso_path}"
+  "${COSIGN}" sign-blob --use-signing-config=false --yes --key env://COSIGN_PRIVATE_KEY --bundle "${artifact_dir}/${iso_name}.sigstore.json" "${iso_path}"
   "${COSIGN}" verify-blob --key "${repo_root}/soltros.pub" --bundle "${artifact_dir}/${iso_name}.sigstore.json" "${iso_path}"
 else
   printf '%s\n' 'ISO signature not generated: configure COSIGN, COSIGN_PRIVATE_KEY, and COSIGN_PASSWORD in the release job.' > "${artifact_dir}/${iso_name}.signature-status"

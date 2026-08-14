@@ -38,15 +38,23 @@ if grep -Fv -- '--new-bundle-format=false' <<<"${container_cosign_commands}" >/d
   exit 1
 fi
 
+container_signing_commands="$(rg '^[[:space:]]+cosign (sign|attest) ' \
+  "${repo_root}/.github/workflows/build.yml" \
+  "${repo_root}/.github/workflows/promote.yml")"
+if grep -Fv -- '--use-signing-config=false' <<<"${container_signing_commands}" >/dev/null; then
+  echo 'Cosign 3 legacy container attachments must disable the default signing config' >&2
+  exit 1
+fi
+
 if rg -n --glob '!tests/test-release-contracts.sh' -- '--output-signature' \
     "${repo_root}/.github" "${repo_root}/tools" "${repo_root}/docs" >/dev/null; then
   echo 'Cosign 3 blob signing must not use the deprecated detached-signature output' >&2
   exit 1
 fi
-grep -Fq -- "--bundle \"\${iso}.sigstore.json\"" \
+grep -Fq -- 'cosign sign-blob --use-signing-config=false' \
   "${repo_root}/.github/workflows/release.yml"
 grep -Fq 'cosign verify-blob' "${repo_root}/.github/workflows/release.yml"
-grep -Fq -- "--bundle \"\${artifact_dir}/\${iso_name}.sigstore.json\"" \
+grep -Fq -- 'sign-blob --use-signing-config=false' \
   "${repo_root}/tools/generate-release-artifacts.sh"
 
 grep -Fqx 'net.waterfox.waterfox' "${repo_root}/repo_files/flatpaks"

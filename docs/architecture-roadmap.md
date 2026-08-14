@@ -75,6 +75,9 @@ separate in Phase 6 and Runtime Evidence.
   verified digest while retaining the selected stable update reference.
 - [x] Record selected variant, source digest, update reference, build identifier,
   and installation mode on the installed system.
+- [x] Start a native cross-desktop first-login setup application only for new
+  installations, with offline-safe defaults, explicit deferral, task retry, and
+  a persistent application-menu entry.
 - [x] Make cancellation and failure leave disks, mounts, temporary containers,
   and installer state in a documented recoverable condition.
 - [x] Produce checksum, signature, SBOM, provenance, and embedded-image inventory
@@ -102,6 +105,8 @@ separate in Phase 6 and Runtime Evidence.
 - [ ] Install each desktop variant offline to a fresh virtual disk, reboot, and
   verify the expected display manager, session, portals, services, and commands.
 - [ ] Verify the opt-in online-update path independently from offline installation.
+- [ ] Verify the first-login setup flow on KDE Plasma, GNOME, Niri with Dank
+  Material Shell, and Niri with Noctalia, including offline, retry, and deferral.
 - [ ] Verify encrypted storage, cancellation, retry, disk-selection protection,
   Secure Boot expectations, and rollback.
 - [ ] Verify local and CI builds from a clean checkout and document exact release

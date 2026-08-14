@@ -155,64 +155,62 @@ The system records the selected image as its signed update source. Use
 operations.
 
 #### Method 2: Fresh Installation
-The development installer currently exercises the Anaconda path. The release
-LiveISO will provide a complete offline live desktop and embed all four desktop
-variants. Network access will be optional and will update the selected image only
-after explicit user consent.
+The LiveISO provides a complete offline KDE live desktop and embeds all four
+desktop variants. Network access is optional and updates the selected image only
+after explicit user consent. After installation, the selected system starts the
+Welcome to SoltrOS application at the user's first graphical login.
 
-### First Boot Setup
+### First-login Setup
 
-1. **Install Flatpaks**:
-   ```bash
-   sh /usr/share/soltros/bin/helper.sh install-flatpaks
-   ```
+Welcome to SoltrOS provides a native GTK setup flow shared by KDE Plasma, GNOME,
+Niri with Dank Material Shell, and Niri with Noctalia. It can configure an
+optional Git identity, preserve or change the login shell, and install selected
+software profiles. Network-dependent choices start disabled when the system is
+offline, and all downloadable profiles remain off until the user selects them.
 
-2. **Setup development environment**:
-   ```bash
-   sh /usr/share/soltros/bin/helper.sh setup-cli
-   ```
+The setup app records completion only after every selected task succeeds. Failed
+tasks remain available for retry, and **Set Up Later** stops automatic launch
+without preventing the app from being reopened from the application menu or with:
 
-3. **Configure Git** (optional):
-   ```bash
-   sh /usr/share/soltros/bin/helper.sh setup-git
-   ```
+```bash
+soltros-welcome
+```
 
-4. **Setup development containers** (optional):
-   ```bash
-   sh /usr/share/soltros/bin/helper.sh setup-distrobox
-   ```
+Automatic launch is enabled only for systems installed by a compatible SoltrOS
+installer. Existing systems that receive the application through an update do
+not unexpectedly enter the first-login flow.
 
 ## 🛠️ Available Commands
 
-SoltrOS includes a comprehensive helper script for system management:
+SoltrOS includes a command dispatcher for system management:
 
 ### Installation & Setup
 ```bash
-sh /usr/share/soltros/bin/helper.sh install                  # Install all SoltrOS components
-sh /usr/share/soltros/bin/helper.sh install-flatpaks         # Install all Flatpak applications
-sh /usr/share/soltros/bin/helper.sh install-dev-tools        # Install development tools
-sh /usr/share/soltros/bin/helper.sh install-gaming           # Install gaming applications
-sh /usr/share/soltros/bin/helper.sh install-multimedia       # Install multimedia tools
-sh /usr/share/soltros/bin/helper.sh setup-cli                # Setup shell configurations
-sh /usr/share/soltros/bin/helper.sh setup-git                # Configure Git with SSH signing
-sh /usr/share/soltros/bin/helper.sh setup-distrobox          # Setup development containers
-sh /usr/share/soltros/bin/helper.sh install-homebrew         # Setup MacOS style Brew package manager
-sh /usr/share/soltros/bin/helper.sh install-nix              # Setup NixOS package manager via Determinite Systems tooling
-sh /usr/share/soltros/bin/helper.sh install-oh-my-zsh        # Setup Oh My Zsh plugins/tools for Zsh
-sh /usr/share/soltros/bin/helper.sh change-to-zsh            # Switch the current user from Bash to Zsh
+soltros install                  # Install all SoltrOS components
+soltros install-flatpaks         # Install all Flatpak applications
+soltros install-dev-tools        # Install development tools
+soltros install-gaming           # Install gaming applications
+soltros install-multimedia       # Install multimedia tools
+soltros setup-cli                # Setup shell configurations
+soltros setup-git                # Configure Git with SSH signing
+soltros setup-distrobox          # Setup development containers
+soltros install-homebrew         # Setup the Homebrew package manager
+soltros install-nix              # Setup the Nix package manager
+soltros install-oh-my-zsh        # Setup Oh My Zsh plugins and tools
+soltros change-to-zsh            # Switch the current user from Bash to Zsh
 ```
 
 ### System Configuration
 ```bash
-sh /usr/share/soltros/bin/helper.sh enable-amdgpu-oc         # Enable AMD GPU overclocking
-sh /usr/share/soltros/bin/helper.sh toggle-session           # Toggle between X11 and Wayland
+soltros enable-amdgpu-oc         # Enable AMD GPU overclocking
+soltros toggle-session           # Toggle between X11 and Wayland
 ```
 
 ### System Management
 ```bash
-sh /usr/share/soltros/bin/helper.sh update                   # Update the system (rpm-ostree, flatpaks, containers)
-sh /usr/share/soltros/bin/helper.sh clean                    # Clean up the system
-sh /usr/share/soltros/bin/helper.sh help                     # Show all available commands
+soltros update                   # Update the system, Flatpaks, and containers
+soltros clean                    # Clean up the system
+soltros help                     # Show all available commands
 ```
 
 ## 🔧 Customization

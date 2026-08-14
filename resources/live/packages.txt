@@ -14,7 +14,7 @@ firefox
 flashrom
 fwupd
 fwupd-plugin-uefi-capsule-data
-gptfdisk
+gdisk
 grub2-efi-x64-cdboot
 konsole
 lm_sensors

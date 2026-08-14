@@ -35,8 +35,14 @@ grep -Fq 'anaconda-live' "${repo_root}/resources/live/packages.txt"
 grep -Fq 'live_package_manifest=' "${repo_root}/resources/live/prepare-root.sh"
 grep -Fq 'NetworkManager' "${repo_root}/resources/live/packages.txt"
 grep -Fq 'firefox' "${repo_root}/resources/live/packages.txt"
+grep -Fqx 'gdisk' "${repo_root}/resources/live/packages.txt"
 grep -Fq 'lshw' "${repo_root}/resources/live/packages.txt"
 grep -Fq 'buildah from' "${liveiso_builder}"
+
+if grep -Fqx 'gptfdisk' "${repo_root}/resources/live/packages.txt"; then
+  printf 'live package manifest contains the obsolete gptfdisk package name\n' >&2
+  exit 1
+fi
 
 mkdir -p "${test_root}/bin" "${test_root}/artifacts"
 cat > "${test_root}/bin/sudo" <<'EOF'

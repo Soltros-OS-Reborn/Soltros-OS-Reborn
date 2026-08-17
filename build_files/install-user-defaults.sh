@@ -6,7 +6,7 @@ variant="${DESKTOP_VARIANT:?DESKTOP_VARIANT is required}"
 target="/usr/share/soltros/defaults/${variant}"
 
 mkdir -p "${target}"
-if [[ -d /etc/skel/.config/niri ]]; then
+if [[ -d /etc/skel/.config ]]; then
   mkdir -p "${target}/.config"
-  cp -a /etc/skel/.config/niri "${target}/.config/"
+  cp -a /etc/skel/.config/. "${target}/.config/"
 fi

@@ -1,0 +1,2 @@
+[general]
+import = ["~/.config/alacritty/soltros-options.toml", "~/.config/alacritty/soltros-base-theme.toml"]

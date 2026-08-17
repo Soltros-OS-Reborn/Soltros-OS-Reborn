@@ -4,8 +4,10 @@ bluez-libs
 bluez-obexd
 btop
 fish
+fastfetch
 flatpak
 jq
+jetbrains-mono-fonts-all
 just
 gtk4
 libadwaita

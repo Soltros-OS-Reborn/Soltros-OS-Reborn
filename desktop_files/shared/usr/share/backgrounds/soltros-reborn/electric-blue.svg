@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080" role="img" aria-labelledby="title desc">
+  <title id="title">SoltrOS Electric Blue</title>
+  <desc id="desc">A dark neutral wallpaper with restrained electric-blue geometric forms.</desc>
+  <rect width="1920" height="1080" fill="#14161b"/>
+  <path d="M0 0h726l314 314-492 492H0z" fill="#1b2535"/>
+  <path d="M1920 0h-510L942 468l300 300h678z" fill="#202a3a"/>
+  <path d="m756 1080 468-468 278 278-190 190z" fill="#26364d"/>
+  <path d="M230 840 718 352l112 112-488 488H118z" fill="#2779d9"/>
+  <path d="M1420 0h188l312 312v188z" fill="#4c9aff"/>
+  <path d="m1398 1080 270-270 168 168v102z" fill="#376fd3"/>
+  <rect x="96" y="910" width="256" height="4" fill="#4c9aff"/>
+  <text x="96" y="968" fill="#e9eef6" font-family="sans-serif" font-size="34" font-weight="600" letter-spacing="2">SOLTROS REBORN</text>
+  <text x="98" y="1012" fill="#9ca9ba" font-family="sans-serif" font-size="18" letter-spacing="4">ELECTRIC BLUE</text>
+</svg>

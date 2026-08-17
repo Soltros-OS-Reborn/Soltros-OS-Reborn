@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+wallpaper="${SOLTROS_WALLPAPER:-/usr/share/backgrounds/soltros-reborn/electric-blue.png}"
+state_file="${XDG_STATE_HOME:-${HOME}/.local/state}/soltros/dms-palette-v1"
+state_dir="${XDG_STATE_HOME:-${HOME}/.local/state}/soltros/dms"
+config_dir="${XDG_CONFIG_HOME:-${HOME}/.config}"
+
+[[ -r "${wallpaper}" ]] || exit 0
+[[ -e "${state_file}" ]] && exit 0
+
+mkdir -p "$(dirname -- "${state_file}")"
+dms matugen generate \
+  --value "${wallpaper}" \
+  --kind image \
+  --mode dark \
+  --icon-theme Papirus-Dark \
+  --shell-dir /usr/share/quickshell/dms \
+  --config-dir "${config_dir}" \
+  --state-dir "${state_dir}" \
+  --terminals-always-dark
+touch "${state_file}"

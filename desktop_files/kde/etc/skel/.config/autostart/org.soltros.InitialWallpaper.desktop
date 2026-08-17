@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=SoltrOS Initial Wallpaper
+Exec=/usr/libexec/soltros/apply-initial-wallpaper
+OnlyShowIn=KDE;
+X-KDE-autostart-after=panel
+NoDisplay=true

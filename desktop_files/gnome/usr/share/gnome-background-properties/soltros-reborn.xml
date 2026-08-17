@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE wallpapers SYSTEM "gnome-wp-list.dtd">
+<wallpapers>
+  <wallpaper deleted="false">
+    <name>SoltrOS Electric Blue</name>
+    <filename>/usr/share/backgrounds/soltros-reborn/electric-blue.png</filename>
+    <filename-dark>/usr/share/backgrounds/soltros-reborn/electric-blue.png</filename-dark>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+  </wallpaper>
+</wallpapers>

@@ -1,5 +1,6 @@
 include "soltros-shell.kdl"
 spawn-at-startup "soltros-welcome" "--automatic"
+spawn-at-startup "swaybg" "-i" "/usr/share/backgrounds/soltros-reborn/electric-blue.png" "-m" "fill"
 
 input {
     keyboard {
@@ -14,9 +15,40 @@ input {
 }
 
 layout {
+    background-color "#14161b"
     gaps 12
     center-focused-column "on-overflow"
     default-column-width { proportion 0.5; }
+    focus-ring {
+        width 2
+        active-color "#4c9aff"
+        inactive-color "#3b414d"
+        urgent-color "#ff6b81"
+    }
+    border {
+        on
+        width 1
+        active-color "#4c9aff"
+        inactive-color "#3b414d"
+        urgent-color "#ff6b81"
+    }
+    shadow {
+        on
+        softness 16
+        spread 2
+        offset x=0 y=3
+        color "#00000080"
+    }
+    tab-indicator {
+        active-color "#4c9aff"
+        inactive-color "#3b414d"
+        urgent-color "#ff6b81"
+    }
+}
+
+cursor {
+    xcursor-theme "Adwaita"
+    xcursor-size 24
 }
 
 hotkey-overlay {
@@ -25,6 +57,7 @@ hotkey-overlay {
 
 binds {
     Mod+T hotkey-overlay-title="Open Terminal" { spawn "alacritty"; }
+    Mod+Shift+Space hotkey-overlay-title="Quick Launcher" { spawn "fuzzel"; }
     Mod+E hotkey-overlay-title="Open File Manager" { spawn "nautilus"; }
     Mod+Q repeat=false { close-window; }
     Mod+O repeat=false { toggle-overview; }

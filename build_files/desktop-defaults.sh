@@ -27,3 +27,13 @@ rpm -q gtk4 libadwaita python3-gobject
 test -x /usr/bin/soltros-welcome
 test -f /etc/xdg/autostart/org.soltros.Welcome.desktop
 test -f /usr/share/applications/org.soltros.Welcome.desktop
+
+log "Validate desktop appearance defaults"
+test -r /usr/share/backgrounds/soltros-reborn/electric-blue.png
+test -r /usr/share/backgrounds/soltros-reborn/electric-blue.svg
+test -x /usr/libexec/soltros/apply-initial-wallpaper
+if [[ "${DESKTOP_VARIANT}" == niri-dms ]]; then
+  test -x /usr/libexec/soltros/apply-initial-dms-palette
+  systemctl --global enable soltros-dms-palette.service
+  systemctl --global is-enabled --quiet soltros-dms-palette.service
+fi

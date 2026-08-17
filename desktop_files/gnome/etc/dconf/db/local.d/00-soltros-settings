@@ -1,7 +1,16 @@
 [org/gnome/desktop/interface]
-icon-theme='Papirus'
+accent-color='blue'
+icon-theme='Papirus-Dark'
 gtk-theme='Adwaita-dark'
 color-scheme='prefer-dark'
+cursor-theme='Adwaita'
+cursor-size=24
+monospace-font-name='JetBrains Mono 11'
+
+[org/gnome/desktop/background]
+picture-uri='file:///usr/share/backgrounds/soltros-reborn/electric-blue.png'
+picture-uri-dark='file:///usr/share/backgrounds/soltros-reborn/electric-blue.png'
+picture-options='zoom'
 
 [org/gnome/desktop/wm/preferences]
 button-layout=':minimize,maximize,close'

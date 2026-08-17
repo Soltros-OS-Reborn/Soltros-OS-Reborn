@@ -1,0 +1,40 @@
+palette = "soltros"
+add_newline = false
+format = "$directory$git_branch$git_status$cmd_duration\n$character"
+
+[palettes.soltros]
+base = "#14161b"
+surface = "#20242d"
+accent = "#4c9aff"
+text = "#dce2eb"
+muted = "#9ca9ba"
+warning = "#e0b456"
+error = "#ff6b81"
+
+[directory]
+style = "bold accent"
+truncation_length = 3
+truncate_to_repo = false
+read_only = " [read-only]"
+read_only_style = "warning"
+
+[git_branch]
+symbol = "git:"
+style = "accent"
+format = " [$symbol$branch]($style)"
+
+[git_status]
+style = "warning"
+format = " [$all_status$ahead_behind]($style)"
+
+[cmd_duration]
+min_time = 2_000
+style = "muted"
+format = " [$duration]($style)"
+
+[character]
+success_symbol = "[>](bold accent)"
+error_symbol = "[>](bold error)"
+
+[package]
+disabled = true

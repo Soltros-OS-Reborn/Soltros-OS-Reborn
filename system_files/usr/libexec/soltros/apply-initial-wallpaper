@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+wallpaper="${SOLTROS_WALLPAPER:-/usr/share/backgrounds/soltros-reborn/electric-blue.png}"
+autostart_file="${HOME}/.config/autostart/org.soltros.InitialWallpaper.desktop"
+
+if command -v plasma-apply-wallpaperimage >/dev/null 2>&1 && [[ -r "${wallpaper}" ]]; then
+  plasma-apply-wallpaperimage "${wallpaper}"
+  rm -f "${autostart_file}"
+fi

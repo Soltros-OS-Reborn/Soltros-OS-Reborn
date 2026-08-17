@@ -1,0 +1,12 @@
+[Unit]
+Description=Generate the initial SoltrOS DMS palette
+After=dms.service
+Wants=dms.service
+ConditionPathExists=!%h/.local/state/soltros/dms-palette-v1
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/soltros/apply-initial-dms-palette
+
+[Install]
+WantedBy=default.target

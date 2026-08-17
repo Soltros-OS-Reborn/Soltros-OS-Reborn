@@ -16,6 +16,7 @@ dnf5 -y install \
   greetd \
   nautilus \
   niri \
+  swaybg \
   wl-clipboard \
   xdg-desktop-portal-gnome \
   xdg-desktop-portal-gtk \
@@ -26,5 +27,5 @@ systemctl enable greetd.service
 systemctl set-default graphical.target
 systemctl is-enabled --quiet greetd.service
 
-rpm -q greetd niri xdg-desktop-portal-gnome xwayland-satellite
+rpm -q greetd niri swaybg xdg-desktop-portal-gnome xwayland-satellite
 log "Shared Niri session installed"

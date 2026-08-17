@@ -28,6 +28,7 @@ apply_layer() {
   fi
 }
 
+apply_layer shared
 if [[ "${desktop_variant}" == niri-* ]]; then
   apply_layer niri-common
 fi

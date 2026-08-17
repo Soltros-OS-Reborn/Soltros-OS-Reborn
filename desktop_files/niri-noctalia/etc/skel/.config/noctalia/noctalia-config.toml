@@ -1,0 +1,8 @@
+[theme]
+mode = "dark"
+source = "wallpaper"
+wallpaper_scheme = "m3-content"
+
+[wallpaper]
+directory = "/usr/share/backgrounds/soltros-reborn"
+fill_mode = "crop"

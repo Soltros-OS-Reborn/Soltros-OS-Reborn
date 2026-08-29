@@ -75,12 +75,18 @@ case "${live_variant}" in
   kde)
     install -D -m 0644 /usr/share/soltros/live/plasmalogin.conf /etc/plasmalogin.conf
     systemctl enable plasmalogin.service
+    ln -sfn /usr/lib/systemd/system/plasmalogin.service \
+      /etc/systemd/system/graphical.target.wants/plasmalogin.service
     ;;
   gnome)
     systemctl enable gdm.service
+    ln -sfn /usr/lib/systemd/system/gdm.service \
+      /etc/systemd/system/graphical.target.wants/gdm.service
     ;;
   niri-dms|niri-noctalia)
     systemctl enable greetd.service
+    ln -sfn /usr/lib/systemd/system/greetd.service \
+      /etc/systemd/system/graphical.target.wants/greetd.service
     ;;
   *)
     echo "Unsupported LiveISO desktop variant: ${live_variant}" >&2

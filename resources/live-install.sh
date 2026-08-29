@@ -169,6 +169,7 @@ jq -n \
 
 cat > "${kickstart}" <<EOF
 graphical
+autopart --type=plain
 ostreecontainer --url ${source_ref}
 
 %post --nochroot

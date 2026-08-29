@@ -73,6 +73,9 @@ grep -Fq 'podman pull registry.example.test/soltros/soltros-os:dev' \
 
 grep -Fq 'catalog.json' "${repo_root}/resources/live-install.sh"
 grep -Fq 'chmod 0755 /home/liveuser/Desktop/soltros-installer.desktop' "${repo_root}/resources/live/prepare-root.sh"
+grep -Fq 'autopart --type=plain' "${repo_root}/resources/live-install.sh"
+grep -Fq 'minsize = "32 GiB"' "${repo_root}/disk_config/config.toml"
+grep -Fq 'minsize = "32 GiB"' "${repo_root}/disk_config/disk.toml"
 grep -Fq "online 'Use the newest signed stable image' off" \
   "${repo_root}/resources/live-install.sh"
 grep -Fq 'nm_online_command=' "${repo_root}/resources/live-install.sh"

@@ -1,7 +1,7 @@
 {
   "desktop": [
     {
-      "base_digest": "sha256:e75431664e30a0f1dc9b8d311756272bdd6ea17cfd4f30690ec241aa0eff4984",
+      "base_digest": "sha256:dd672611f9ffbfab7ceff4a43c1365ce09b04d5732b8657a3d1f3fc5ffaf608f",
       "base_image": "quay.io/fedora/fedora-kinoite",
       "base_tag": "44",
       "description": "A complete and highly configurable desktop with a familiar workflow.",
@@ -12,7 +12,7 @@
       "session": "plasma"
     },
     {
-      "base_digest": "sha256:c8c6b109cc8779b4313d986c9d1562d5de04dd36fa93c4b0392641bda8970888",
+      "base_digest": "sha256:44847320a55216b88ac6883a7e72c549dbb0775490f1d7bbd11d428281af29ee",
       "base_image": "quay.io/fedora/fedora-silverblue",
       "base_tag": "44",
       "description": "A focused desktop with a consistent and streamlined workflow.",
@@ -23,7 +23,7 @@
       "session": "gnome"
     },
     {
-      "base_digest": "sha256:f51e9dca468f0c9d4b2f534d576818d2c4be8bfe225e1eb887ff10101082ecf3",
+      "base_digest": "sha256:9c3997cafe559f0b19b755f13a5a83ae4f6ffbbc0e56a9f0508ec0311bcf0faf",
       "base_image": "quay.io/fedora/fedora-bootc",
       "base_tag": "44",
       "description": "A scrolling Wayland compositor with the integrated Dank Material Shell.",
@@ -34,7 +34,7 @@
       "session": "niri"
     },
     {
-      "base_digest": "sha256:f51e9dca468f0c9d4b2f534d576818d2c4be8bfe225e1eb887ff10101082ecf3",
+      "base_digest": "sha256:9c3997cafe559f0b19b755f13a5a83ae4f6ffbbc0e56a9f0508ec0311bcf0faf",
       "base_image": "quay.io/fedora/fedora-bootc",
       "base_tag": "44",
       "description": "A scrolling Wayland compositor with the native Noctalia desktop shell.",

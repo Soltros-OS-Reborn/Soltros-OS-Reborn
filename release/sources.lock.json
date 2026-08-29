@@ -6,7 +6,7 @@
   },
   "live_media_builder": {
     "image": "quay.io/fedora/fedora",
-    "digest": "sha256:973140bffd7712ff9f687c271f355013b1f28e57fb0ba05c44a62e239661b95d",
+    "digest": "sha256:df52038ff64ee61affa188d78beb85cf6eecfe4e9f6042238269ccdc8e944392",
     "packages": [
       "lorax-lmc-novirt"
     ]

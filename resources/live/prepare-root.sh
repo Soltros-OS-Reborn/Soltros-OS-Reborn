@@ -15,6 +15,7 @@ if (( ${#live_packages[@]} == 0 )); then
 fi
 
 dnf --disablerepo='*' --enablerepo=fedora --enablerepo=updates \
+  --enablerepo=fedora-cisco-openh264 \
   install --assumeyes \
   "${live_packages[@]}"
 

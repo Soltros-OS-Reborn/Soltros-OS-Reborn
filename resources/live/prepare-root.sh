@@ -75,6 +75,7 @@ install -D -m 0644 /usr/share/soltros/live/soltros-live-installer.rules \
 install -D -m 0644 /usr/share/soltros/live/soltros-installer.desktop \
   /home/liveuser/Desktop/soltros-installer.desktop
 chown liveuser:liveuser /home/liveuser/Desktop/soltros-installer.desktop
+chmod 0755 /home/liveuser/Desktop/soltros-installer.desktop
 chmod 0755 /home/liveuser/Desktop
 
 touch /.liveimg

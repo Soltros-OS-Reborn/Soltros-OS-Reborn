@@ -3,7 +3,6 @@ keyboard us
 timezone UTC --utc
 rootpw --lock
 shutdown
-bootloader --append="selinux=0"
 
 part / --fstype=ext4 --size=28672
 

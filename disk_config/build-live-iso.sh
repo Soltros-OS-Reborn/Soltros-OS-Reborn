@@ -46,6 +46,7 @@ builder_container=""
 builder_image=""
 builder_image_temporary="false"
 lorax_work_dir=""
+grub_patch_dir=""
 fedora_version="$(jq -er '.product.fedora_version' "${repo_root}/release/release.json")"
 builder_cache_image="localhost/soltros-live-media-builder:fedora${fedora_version}"
 
@@ -73,6 +74,9 @@ cleanup() {
   fi
   if [[ -n "${lorax_work_dir}" && -d "${lorax_work_dir}" ]]; then
     sudo rm -rf "${lorax_work_dir}"
+  fi
+  if [[ -n "${grub_patch_dir}" && -d "${grub_patch_dir}" ]]; then
+    rm -rf "${grub_patch_dir}"
   fi
   exit "${status}"
 }
@@ -267,6 +271,20 @@ if [[ -z "${produced_iso}" ]]; then
 fi
 sudo mv "${produced_iso}" "${iso_path}"
 sudo chown "$(id -u):$(id -g)" "${iso_path}"
+
+grub_patch_dir="$(mktemp -d "${output_dir}/.soltros-live-grub-XXXXXX")"
+xorriso -osirrox on -indev "${iso_path}" \
+  -extract /boot/grub2/grub.cfg "${grub_patch_dir}/grub.cfg" \
+  -extract /EFI/BOOT/grub.cfg "${grub_patch_dir}/efi-grub.cfg" >/dev/null 2>&1
+sed -i '/^[[:space:]]*linux[[:space:]]/ s/$/ selinux=0/' \
+  "${grub_patch_dir}/grub.cfg" "${grub_patch_dir}/efi-grub.cfg"
+patched_iso="${grub_patch_dir}/$(basename -- "${iso_path}")"
+xorriso -indev "${iso_path}" -outdev "${patched_iso}" \
+  -map "${grub_patch_dir}/grub.cfg" /boot/grub2/grub.cfg \
+  -map "${grub_patch_dir}/efi-grub.cfg" /EFI/BOOT/grub.cfg \
+  -boot_image any replay >/dev/null 2>&1
+mv "${patched_iso}" "${iso_path}"
+grub_patch_dir=""
 sha256sum "${iso_path}" > "${iso_path}.sha256"
 SOLTROS_OFFLINE_PAYLOAD_DIR="${payload_dir}" BUILD_ID="${BUILD_ID:-${tag}}" \
   LIVEISO_PROFILE="${profile}" \

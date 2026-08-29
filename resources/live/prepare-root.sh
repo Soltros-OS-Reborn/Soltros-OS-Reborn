@@ -19,6 +19,18 @@ dnf --disablerepo='*' --enablerepo=fedora --enablerepo=updates \
   install --assumeyes \
   "${live_packages[@]}"
 
+grub_defaults=/etc/default/grub
+if [[ -f "${grub_defaults}" ]]; then
+  if grep -q '^GRUB_CMDLINE_LINUX=' "${grub_defaults}"; then
+    sed -i 's/^GRUB_CMDLINE_LINUX=.*/GRUB_CMDLINE_LINUX="selinux=0"/' "${grub_defaults}"
+  else
+    printf '%s\n' 'GRUB_CMDLINE_LINUX="selinux=0"' >> "${grub_defaults}"
+  fi
+else
+  install -D -m 0644 /dev/null "${grub_defaults}"
+  printf '%s\n' 'GRUB_CMDLINE_LINUX="selinux=0"' > "${grub_defaults}"
+fi
+
 efi_grub_source="$(find /usr/lib/efi/grub2 -path '*/EFI/fedora/gcdx64.efi' -type f -print -quit)"
 efi_shim_source="/usr/lib/efi/shim/$(rpm -q --qf '%{VERSION}-%{RELEASE}\n' shim-x64)/EFI"
 test -n "${efi_grub_source}"

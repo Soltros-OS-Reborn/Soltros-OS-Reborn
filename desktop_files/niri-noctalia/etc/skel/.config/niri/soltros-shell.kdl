@@ -1,4 +1,4 @@
-spawn-at-startup "noctalia" "--daemon"
+spawn-at-startup "soltros-noctalia-session" "--daemon"
 
 binds {
     Mod+Space hotkey-overlay-title="Application Launcher" { spawn "noctalia" "msg" "panel-toggle" "launcher"; }

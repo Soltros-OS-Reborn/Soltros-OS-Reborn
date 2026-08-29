@@ -1,0 +1,13 @@
+[Unit]
+Description=SoltrOS KDE Material You Colors
+After=plasma-workspace.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/kde-material-you-colors --file /usr/share/backgrounds/soltros-reborn/electric-blue.png --dark --iconslight Papirus-Dark --iconsdark Papirus-Dark
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=graphical-session.target

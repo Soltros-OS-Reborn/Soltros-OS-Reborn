@@ -4,6 +4,7 @@ set -euo pipefail
 
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 output_dir="${1:-${repo_root}/output/liveiso}"
+profile="${2:-${LIVEISO_PROFILE:-online}}"
 registry="${IMAGE_REGISTRY:-localhost/soltros-reborn}"
 tag="${IMAGE_TAG:-dev}"
 source_lock="${repo_root}/release/sources.lock.json"
@@ -25,7 +26,17 @@ esac
 
 registry="${registry,,}"
 registry="${registry%/}"
-carrier_name="$(jq -er '.[] | select(.id == "kde") | .image_name' \
+if [[ "${profile}" != online ]] && ! jq -e --arg profile "${profile}" \
+    'any(.[]; .id == $profile)' "${repo_root}/variants/desktop-variants.json" >/dev/null; then
+  echo "Unsupported LiveISO profile: ${profile}" >&2
+  exit 1
+fi
+carrier_variant="${profile}"
+if [[ "${profile}" == online ]]; then
+  carrier_variant="kde"
+fi
+carrier_name="$(jq -er --arg variant "${carrier_variant}" \
+  '.[] | select(.id == $variant) | .image_name' \
   "${repo_root}/variants/desktop-variants.json")"
 carrier_image="${INSTALLER_SOURCE_IMAGE:-${registry}/${carrier_name}:${tag}}"
 carrier_container=""
@@ -105,7 +116,11 @@ label_live_rootfs() {
 mkdir -p "${output_dir}"
 output_dir="$(cd -- "${output_dir}" && pwd)"
 if [[ -z "${payload_dir}" ]]; then
-  payload_dir="${output_dir}/offline-payload"
+  payload_dir="${output_dir}/offline-payload-${profile}"
+fi
+offline_variant=""
+if [[ "${profile}" != online ]]; then
+  offline_variant="${profile}"
 fi
 
 available_bytes="$(df --output=avail --block-size=1 "${output_dir}" | tail -n 1 | tr -d ' ')"
@@ -130,6 +145,10 @@ if (( available_bytes < required_free_bytes )); then
   exit 1
 fi
 
+variant_filter='.[].image_name'
+if [[ "${profile}" != online ]]; then
+  variant_filter='map(select(.id == $profile))[].image_name'
+fi
 while IFS=$'\t' read -r image_name; do
   image_ref="${registry}/${image_name}:${tag}"
   if [[ "${image_ref}" == localhost/* ]]; then
@@ -143,7 +162,8 @@ while IFS=$'\t' read -r image_name; do
   else
     sudo podman pull "${image_ref}" >/dev/null
   fi
-done < <(jq -r '.[].image_name' "${repo_root}/variants/desktop-variants.json")
+done < <(jq -r --arg profile "${profile}" "${variant_filter}" \
+  "${repo_root}/variants/desktop-variants.json")
 
 if [[ -n "${existing_rootfs}" ]]; then
   rootfs_image="${existing_rootfs}"
@@ -151,6 +171,7 @@ else
   mkdir -p "${payload_dir}"
   if [[ ! -f "${payload_dir}/catalog.json" ]]; then
     sudo env IMAGE_REGISTRY="${registry}" IMAGE_TAG="${tag}" BUILD_ID="${BUILD_ID:-${tag}}" \
+      OFFLINE_VARIANT="${offline_variant}" \
       "${repo_root}/disk_config/build-offline-payload.sh" "${payload_dir}"
     sudo chown -R "$(id -u):$(id -g)" "${payload_dir}"
   fi
@@ -163,7 +184,8 @@ else
     "${repo_root}/resources/live" /usr/share/soltros/live
   sudo buildah copy "${carrier_container}" "${payload_dir}" /usr/share/soltros/installer
   sudo buildah run "${carrier_container}" -- chmod 0755 /usr/share/soltros/bin/live-install /usr/share/soltros/live/prepare-root.sh
-  sudo buildah run "${carrier_container}" -- /usr/share/soltros/live/prepare-root.sh
+  sudo buildah run --env "SOLTROS_LIVE_VARIANT=${carrier_variant}" \
+    "${carrier_container}" -- /usr/share/soltros/live/prepare-root.sh
 
   carrier_mount="$(sudo buildah mount "${carrier_container}")"
   rootfs_size="$(sudo du -sx --block-size=1 "${carrier_mount}" | awk '{ print $1 + 4294967296 }')"
@@ -230,13 +252,13 @@ sudo ionice -c 2 -n 7 nice -n 10 podman run \
     --compression="${compression}" \
     --project='SoltrOS Reborn' \
     --releasever="$(jq -er '.product.fedora_version' "${repo_root}/release/release.json")" \
-    --volid="SOLTROS_REBORN_LIVE" \
+    --volid="SOLTROS_REBORN_${profile^^}" \
     --iso-only \
-    --iso-name="SoltrOS-${tag}-live-x86_64.iso" \
+    --iso-name="SoltrOS-${tag}-${profile}-x86_64.iso" \
     --tmp=/work/tmp \
     --resultdir=/work/result
 
-iso_name="SoltrOS-${tag}-live-x86_64.iso"
+iso_name="SoltrOS-${tag}-${profile}-x86_64.iso"
 produced_iso="$(find "${lorax_work_dir}/result" -type f -name "${iso_name}" -print -quit)"
 iso_path="${output_dir}/${iso_name}"
 if [[ -z "${produced_iso}" ]]; then
@@ -247,6 +269,7 @@ sudo mv "${produced_iso}" "${iso_path}"
 sudo chown "$(id -u):$(id -g)" "${iso_path}"
 sha256sum "${iso_path}" > "${iso_path}.sha256"
 SOLTROS_OFFLINE_PAYLOAD_DIR="${payload_dir}" BUILD_ID="${BUILD_ID:-${tag}}" \
+  LIVEISO_PROFILE="${profile}" \
   "${repo_root}/tools/generate-release-artifacts.sh" "${iso_path}" "${output_dir}/release-artifacts"
 
 printf 'ISO=%s\n' "${iso_path}"

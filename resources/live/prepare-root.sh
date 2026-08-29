@@ -3,6 +3,7 @@
 set -euo pipefail
 
 live_package_manifest="${SOLTROS_LIVE_PACKAGE_MANIFEST:-/usr/share/soltros/live/packages.txt}"
+live_variant="${SOLTROS_LIVE_VARIANT:-kde}"
 if [[ ! -r "${live_package_manifest}" ]]; then
   echo "Live package manifest is missing: ${live_package_manifest}" >&2
   exit 1
@@ -56,7 +57,6 @@ install -d -m 0755 /etc/sudoers.d /etc/polkit-1/rules.d
 printf '%s\n' 'liveuser ALL=(root) NOPASSWD: /usr/bin/liveinst' > /etc/sudoers.d/soltros-live-installer
 chmod 0440 /etc/sudoers.d/soltros-live-installer
 
-install -D -m 0644 /usr/share/soltros/live/plasmalogin.conf /etc/plasmalogin.conf
 install -D -m 0644 /usr/share/soltros/live/soltros-live-installer.rules \
   /etc/polkit-1/rules.d/49-soltros-live-installer.rules
 install -D -m 0644 /usr/share/soltros/live/soltros-installer.desktop \
@@ -70,6 +70,21 @@ rm -f /etc/machine-id
 ln -s /dev/null /etc/systemd/system/systemd-firstboot.service
 systemctl enable NetworkManager.service
 systemctl enable bluetooth.service
-systemctl enable plasmalogin.service
+case "${live_variant}" in
+  kde)
+    install -D -m 0644 /usr/share/soltros/live/plasmalogin.conf /etc/plasmalogin.conf
+    systemctl enable plasmalogin.service
+    ;;
+  gnome)
+    systemctl enable gdm.service
+    ;;
+  niri-dms|niri-noctalia)
+    systemctl enable greetd.service
+    ;;
+  *)
+    echo "Unsupported LiveISO desktop variant: ${live_variant}" >&2
+    exit 1
+    ;;
+esac
 
 install -D -m 0644 /usr/share/soltros/live/motd /etc/motd

@@ -1,5 +1,12 @@
 {
   "live_variant": "kde",
+  "media_profiles": [
+    "online",
+    "kde",
+    "gnome",
+    "niri-dms",
+    "niri-noctalia"
+  ],
   "offline_required": true,
   "online_update_default": false,
   "online_update_requires_consent": true,

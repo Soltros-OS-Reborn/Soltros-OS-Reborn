@@ -41,6 +41,7 @@ jq -S -n \
     schema_version: 1,
     payload_path: $release[0].installer.payload_path,
     live_variant: $release[0].installer.live_variant,
+    media_profiles: $release[0].installer.media_profiles,
     offline_required: $release[0].installer.offline_required,
     online_update_default: $release[0].installer.online_update_default,
     online_update_requires_consent: $release[0].installer.online_update_requires_consent,

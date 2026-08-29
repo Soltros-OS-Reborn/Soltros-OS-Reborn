@@ -9,6 +9,7 @@ release_manifest="${repo_root}/release/release.json"
 registry="${IMAGE_REGISTRY:-localhost/soltros-reborn}"
 tag="${IMAGE_TAG:-dev}"
 skopeo_command="${SKOPEO:-skopeo}"
+offline_variant="${OFFLINE_VARIANT:-}"
 
 registry="${registry,,}"
 registry="${registry%/}"
@@ -35,6 +36,17 @@ fi
 
 catalog_entries="${work_dir}/catalog-entries.jsonl"
 : > "${catalog_entries}"
+
+if [[ -n "${offline_variant}" ]] && ! jq -e --arg variant "${offline_variant}" \
+    'any(.[]; .id == $variant)' "${variant_manifest}" >/dev/null; then
+  echo "Unknown offline payload variant: ${offline_variant}" >&2
+  exit 1
+fi
+
+variant_filter='.'
+if [[ -n "${offline_variant}" ]]; then
+  variant_filter='map(select(.id == $variant))'
+fi
 
 while IFS=$'\t' read -r variant display_name image_name; do
   source_ref="${registry}/${image_name}:${tag}"
@@ -68,7 +80,9 @@ while IFS=$'\t' read -r variant display_name image_name; do
       update_ref: $update_ref,
       online_updates_available: $online_updates_available
     }' >> "${catalog_entries}"
-done < <(jq -r '.[] | [.id, .display_name, .image_name] | @tsv' "${variant_manifest}")
+done < <(jq -r --arg variant "${offline_variant}" \
+  "${variant_filter}[] | [.id, .display_name, .image_name] | @tsv" \
+  "${variant_manifest}")
 
 jq -s \
   --arg build_id "${build_id}" \

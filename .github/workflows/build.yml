@@ -262,10 +262,14 @@ jobs:
             "docker://${IMAGE_REGISTRY}/${IMAGE_NAME}:${DEFAULT_TAG}" >/dev/null
 
   build_iso:
-    name: Build desktop-selectable LiveISO
+    name: Build ${{ matrix.profile }} LiveISO
     needs: [prepare, build_push]
     if: needs.prepare.outputs.publish_enabled == 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        profile: [online, kde, gnome, niri-dms, niri-noctalia]
     permissions:
       contents: read
       packages: read
@@ -290,18 +294,19 @@ jobs:
         env:
           IMAGE_REGISTRY: ${{ needs.prepare.outputs.image_registry }}
           IMAGE_TAG: ${{ needs.prepare.outputs.default_tag }}
+          LIVEISO_PROFILE: ${{ matrix.profile }}
           COSIGN: cosign
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-        run: disk_config/build-live-iso.sh artifacts
+        run: disk_config/build-live-iso.sh "artifacts/${{ matrix.profile }}" "${{ matrix.profile }}"
 
       - name: Upload LiveISO
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: soltros-live-installer-${{ github.sha }}
+          name: soltros-live-${{ matrix.profile }}-${{ github.sha }}
           path: |
-            artifacts/**/*.iso
-            artifacts/**/*.sha256
-            artifacts/**/release-artifacts/*
+            artifacts/${{ matrix.profile }}/**/*.iso
+            artifacts/${{ matrix.profile }}/**/*.sha256
+            artifacts/${{ matrix.profile }}/**/release-artifacts/*
           if-no-files-found: error
           retention-days: 14

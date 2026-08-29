@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+runtime_dir="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+export XDG_RUNTIME_DIR="${runtime_dir}"
+export DBUS_SESSION_BUS_ADDRESS="${DBUS_SESSION_BUS_ADDRESS:-unix:path=${runtime_dir}/bus}"
+export PULSE_SERVER="${PULSE_SERVER:-unix:${runtime_dir}/pulse/native}"
+export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-niri}"
+export XDG_SESSION_TYPE="${XDG_SESSION_TYPE:-wayland}"
+
+exec noctalia "$@"

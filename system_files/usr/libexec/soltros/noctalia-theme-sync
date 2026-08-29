@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+config_home="${XDG_CONFIG_HOME:-${HOME}/.config}"
+runtime_dir="${XDG_RUNTIME_DIR:-/tmp}"
+lock_file="${runtime_dir}/soltros-theme-sync.lock"
+action="${1:-sync}"
+
+mkdir -p "$(dirname -- "${lock_file}")"
+exec 9>"${lock_file}"
+flock -w 5 9
+
+theme_mode="${NOCTALIA_THEME_MODE:-}"
+if [[ -z "${theme_mode}" ]] && command -v noctalia >/dev/null 2>&1; then
+  theme_mode="$(noctalia msg theme-mode-get 2>/dev/null || true)"
+fi
+if [[ "${action}" == toggle ]]; then
+  if command -v noctalia >/dev/null 2>&1 && noctalia msg status >/dev/null 2>&1; then
+    noctalia msg theme-mode-toggle >/dev/null 2>&1 || true
+    sleep 0.2
+    theme_mode="$(noctalia msg theme-mode-get 2>/dev/null || true)"
+  elif [[ "${theme_mode}" == prefer-dark || "${theme_mode}" == dark || -z "${theme_mode}" ]]; then
+    theme_mode=light
+  else
+    theme_mode=dark
+  fi
+fi
+if [[ "${theme_mode}" != light ]]; then
+  theme_mode=dark
+fi
+
+if command -v gsettings >/dev/null 2>&1; then
+  gsettings set org.gnome.desktop.interface color-scheme "prefer-${theme_mode}" 2>/dev/null || true
+  gsettings set org.gnome.desktop.interface gtk-theme "Adwaita-${theme_mode}" 2>/dev/null || true
+fi
+
+update_ini() {
+  local file="$1" key="$2" value="$3" directory temporary found
+  directory="$(dirname -- "${file}")"
+  mkdir -p "${directory}"
+  temporary="$(mktemp "${directory}/.soltros-theme.XXXXXX")"
+  found=0
+  if [[ -f "${file}" ]]; then
+    while IFS= read -r line || [[ -n "${line}" ]]; do
+      if [[ "${line}" =~ ^[[:space:]]*${key}[[:space:]]*= ]]; then
+        printf '%s=%s\n' "${key}" "${value}" >>"${temporary}"
+        found=1
+      else
+        printf '%s\n' "${line}" >>"${temporary}"
+      fi
+    done <"${file}"
+  fi
+  if (( found == 0 )); then
+    if ! grep -q '^\[Settings\]' "${temporary}" 2>/dev/null; then
+      printf '%s\n' '[Settings]' >>"${temporary}"
+    fi
+    printf '%s=%s\n' "${key}" "${value}" >>"${temporary}"
+  fi
+  chmod 0644 "${temporary}"
+  mv -f "${temporary}" "${file}"
+}
+
+dark_value=false
+gtk_theme=Adwaita
+if [[ "${theme_mode}" == dark ]]; then
+  dark_value=true
+  gtk_theme=Adwaita-dark
+fi
+update_ini "${config_home}/gtk-3.0/settings.ini" gtk-application-prefer-dark-theme "${dark_value}"
+update_ini "${config_home}/gtk-3.0/settings.ini" gtk-theme-name "${gtk_theme}"
+update_ini "${config_home}/gtk-4.0/settings.ini" gtk-application-prefer-dark-theme "${dark_value}"
+update_ini "${config_home}/gtk-4.0/settings.ini" gtk-theme-name "${gtk_theme}"
+
+if command -v pkill >/dev/null 2>&1; then
+  pkill -SIGUSR1 -x kitty 2>/dev/null || true
+fi
+
+if [[ -t 1 && -n "${1:-}" ]]; then
+  printf 'Theme synced to: %s\n' "${theme_mode}"
+fi

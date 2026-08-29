@@ -147,7 +147,7 @@ for variant in kde gnome niri-dms niri-noctalia; do
         niri-noctalia)
             [[ -f "${target_root}/etc/greetd/config.toml" ]] ||
                 fail 'Niri Noctalia overlay must contain shared Niri files'
-            grep -Fq 'spawn-at-startup "noctalia" "--daemon"' \
+            grep -Fq 'spawn-at-startup "soltros-noctalia-session" "--daemon"' \
                 "${target_root}/etc/skel/.config/niri/soltros-shell.kdl" ||
                 fail 'Niri Noctalia overlay must start Noctalia'
             ;;

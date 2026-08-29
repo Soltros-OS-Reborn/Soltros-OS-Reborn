@@ -8,6 +8,7 @@ artifact_dir="${2:-$(dirname -- "${iso_argument}")/release-artifacts}"
 release_manifest="${repo_root}/release/release.json"
 variant_manifest="${repo_root}/variants/desktop-variants.json"
 payload_dir="${SOLTROS_OFFLINE_PAYLOAD_DIR:-}"
+media_profile="${LIVEISO_PROFILE:-online}"
 iso_path="$(realpath "${iso_argument}")"
 artifact_dir="$(realpath -m "${artifact_dir}")"
 
@@ -52,9 +53,11 @@ jq -S -n \
   --arg digest "sha256:${iso_digest}" \
   --arg build_id "${build_id}" \
   --arg signature "${signature_artifact}" \
+  --arg media_profile "${media_profile}" \
+  --arg selected_variant "${media_profile}" \
   --slurpfile release "${release_manifest}" \
   --slurpfile variants "${variant_manifest}" \
-  '{schema_version:1,product:$release[0].product,build_id:$build_id,iso:{name:$iso,digest:$digest,checksum:($iso+".sha256"),signature:$signature},variants:($variants[0]|map({id,display_name,image_name})),publication:$release[0].publication,artifacts:[($iso+".sha256"),$signature,($iso+".spdx.json"),($iso+".provenance.json"),($iso+".inventory.json")]}' \
+  '{schema_version:1,product:$release[0].product,build_id:$build_id,media_profile:$media_profile,iso:{name:$iso,digest:$digest,checksum:($iso+".sha256"),signature:$signature},variants:($variants[0]|if $selected_variant == "online" then map({id,display_name,image_name}) else map(select(.id == $selected_variant) | {id,display_name,image_name}) end),publication:$release[0].publication,artifacts:[($iso+".sha256"),$signature,($iso+".spdx.json"),($iso+".provenance.json"),($iso+".inventory.json")]}' \
   > "${artifact_dir}/release-index.json"
 
 if [[ -n "${COSIGN_PRIVATE_KEY:-}" && -n "${COSIGN_PASSWORD:-}" && -n "${COSIGN:-}" ]]; then

@@ -93,6 +93,11 @@ test "$(sha256sum /etc/pki/containers/soltros.pub | awk '{print $1}')" = \
 - Four isolated desktop images: KDE Plasma, GNOME, Niri + Dank Material Shell, and Niri + Noctalia
 - A variant-specific display manager: Plasma Login Manager, GDM, or greetd
 - **Papirus icon theme** for a modern look
+- **Optional MoreWaita icon theme** for expanded Adwaita-compatible app and
+  MIME coverage; Papirus Dark remains the default
+- **Yazi terminal file manager** with a SoltrOS dark-blue configuration
+- **Opt-in KDE Material You Colors**, Pywalfox native messaging, and Ghostty
+  integration; the image defaults remain unchanged until explicitly enabled
 - **Custom branding** and SoltrOS identity
 - **Optimized settings** for productivity and aesthetics
 
@@ -104,6 +109,8 @@ test "$(sha256sum /etc/pki/containers/soltros.pub | awk '{print $1}')" = \
 - `tailscale` - Zero-config VPN
 - `gamemode` & `mangohud` - Gaming performance tools
 - `papirus-icon-theme` - Modern icon set
+- `ffmpegthumbnailer` - Video previews for Yazi and other file browsers
+- `yazi` and `ya` - Explicit terminal file manager and companion CLI
 - `thermald` & `mbpfan` - Thermal management
 - `lm_sensors` - Hardware monitoring
 - `kernel-cachyos` - High-performance gaming kernel
@@ -155,10 +162,13 @@ The system records the selected image as its signed update source. Use
 operations.
 
 #### Method 2: Fresh Installation
-The LiveISO provides a complete offline KDE live desktop and embeds all four
-desktop variants. Network access is optional and updates the selected image only
-after explicit user consent. After installation, the selected system starts the
-Welcome to SoltrOS application at the user's first graphical login.
+SoltrOS publishes one universal online installer and four desktop-specific
+offline LiveISOs. The online ISO boots a complete KDE live desktop and embeds all
+four variants for selection. Each offline ISO boots the same desktop it installs
+and contains only that variant's signed payload. Network access is optional on all
+media: a newer signed image is offered only after explicit user consent. After
+installation, the selected system starts the Welcome to SoltrOS application at
+the user's first graphical login.
 
 ### First-login Setup
 
@@ -182,6 +192,19 @@ not unexpectedly enter the first-login flow.
 
 ## 🛠️ Available Commands
 
+Optional visual integrations are user-level and reversible:
+
+```bash
+soltros-theme tokens                         # Show the shared design tokens
+soltros-theme kde-material-you enable|disable  # KDE only
+soltros-theme waterfox enable|disable          # Niri + DMS only
+soltros-theme ghostty enable|disable           # Niri + DMS only
+```
+
+Waterfox integration requires the Pywalfox extension to be installed in the
+Waterfox Flatpak. Ghostty is installed as an optional binary in the Niri + DMS
+image, but Kitty remains the default terminal until the command is enabled.
+
 SoltrOS includes a command dispatcher for system management:
 
 ### Installation & Setup
@@ -194,6 +217,9 @@ soltros install-multimedia       # Install multimedia tools
 soltros setup-cli                # Setup shell configurations
 soltros setup-git                # Configure Git with SSH signing
 soltros setup-distrobox          # Setup development containers
+soltros-workspace list            # List declarative development profiles
+soltros-workspace create fedora-dev
+soltros-workspace enter fedora-dev
 soltros install-homebrew         # Setup the Homebrew package manager
 soltros install-nix              # Setup the Nix package manager
 soltros install-oh-my-zsh        # Setup Oh My Zsh plugins and tools
@@ -221,6 +247,15 @@ SoltrOS automatically sets up:
 - **Aliases** for common tools (eza, bat, flatpak apps)
 - **Environment variables** for optimal development experience
 - **Tool integrations** for starship, atuin, zoxide, etc.
+
+Yazi is available as an explicit `yazi` command. Its defaults include dark
+surfaces, Electric Blue selection, size-based listing, hidden-file visibility,
+and `g h`/`g c` shortcuts for the home and configuration directories. It does
+not change graphical file-manager or MIME defaults.
+
+MoreWaita is an optional icon theme. Select it through KDE System Settings,
+GNOME Tweaks, or Dank Material Shell settings; the shared Papirus Dark choice
+remains the initial default.
 
 ### Gaming Optimizations
 Pre-configured settings include:
@@ -256,17 +291,22 @@ just build-image niri-dms
 just build-image niri-noctalia
 ```
 
-### Build the LiveISO
+### Build LiveISOs
 ```bash
-disk_config/build-live-iso.sh output/liveiso
+disk_config/build-live-iso.sh output/liveiso online
+disk_config/build-live-iso.sh output/liveiso/kde kde
+disk_config/build-live-iso.sh output/liveiso/gnome gnome
+disk_config/build-live-iso.sh output/liveiso/niri-dms niri-dms
+disk_config/build-live-iso.sh output/liveiso/niri-noctalia niri-noctalia
 ```
 
 Release builds use `xz` SquashFS compression. For faster local LiveISO QA, set
 `LIVEISO_COMPRESSION=zstd`; the resulting media has the same runtime and
 installer behavior but uses more disk space.
 
-The LiveISO is a complete KDE live environment with all four deduplicated bootc
-payloads embedded for offline installation. An optional update is offered only
+The online LiveISO is a complete KDE live environment with all four deduplicated
+bootc payloads embedded for offline installation. The four offline LiveISOs each
+contain one matching desktop and payload. An optional update is offered only
 after network and signature preflight succeeds and remains disabled by default.
 Recovery details are in [`docs/installer-recovery.md`](docs/installer-recovery.md),
 and the gated publication procedure is in [`docs/release.md`](docs/release.md).

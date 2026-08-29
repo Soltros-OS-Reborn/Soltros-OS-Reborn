@@ -65,8 +65,9 @@ separate in Phase 6 and Runtime Evidence.
 
 - [x] Build a complete graphical Live environment with networking, audio,
   Bluetooth, graphics, storage, terminal, browser, and hardware diagnostics.
-- [x] Store all four installable bootc variants in one deduplicated local OCI
-  layout on the ISO and verify that no registry access is required.
+- [x] Store the installable bootc payload in a local OCI layout on the ISO and
+  verify that no registry access is required. The online profile carries all
+  four variants; each offline profile carries only its matching variant.
 - [x] Provide a graphical installer flow for locale, keyboard, timezone, desktop
   variant, storage, encryption, user, hostname, and final confirmation.
 - [x] Present an optional, default-off online-update choice only after network and
@@ -92,8 +93,9 @@ separate in Phase 6 and Runtime Evidence.
   promotion rules.
 - [x] Push to a temporary digest, sign and verify it, then promote release tags.
 - [x] Generate and attach SPDX SBOM and build provenance for every OCI image.
-- [x] Publish the offline LiveISO through a durable release surface rather than a
-  short-lived CI artifact.
+- [x] Build five explicit LiveISO profiles (one universal online installer and
+  four desktop-specific offline media) and publish their metadata through a
+  durable release surface rather than a short-lived CI artifact.
 - [x] Keep publication disabled until the repository owner explicitly enables the
   Reborn package namespace and release credentials, then publish all four packages
   through the signed channel-promotion workflow.
@@ -146,3 +148,7 @@ separate in Phase 6 and Runtime Evidence.
   network installer alone does not satisfy the product contract.
 - **2026-08-11:** Online installation updates are optional, explicit, signed, and
   default off.
+- **2026-08-29:** LiveISO distribution follows the mainstream split: one KDE
+  carrier-based universal online installer plus four matching offline desktop
+  LiveISOs. GitHub Releases carry signed metadata; large ISO bytes belong on an
+  external immutable download host because of the per-asset size limit.

@@ -37,3 +37,8 @@ if [[ "${DESKTOP_VARIANT}" == niri-dms ]]; then
   systemctl --global enable soltros-dms-palette.service
   systemctl --global is-enabled --quiet soltros-dms-palette.service
 fi
+if [[ "${DESKTOP_VARIANT}" == niri-noctalia ]]; then
+  test -x /usr/bin/soltros-noctalia-session
+  test -x /usr/libexec/soltros/noctalia-theme-sync
+  test -r /usr/share/soltros/workspaces.json
+fi

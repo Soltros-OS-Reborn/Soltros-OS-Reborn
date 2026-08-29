@@ -11,6 +11,11 @@ on:
         description: Durable GitHub release tag
         required: true
         type: string
+      download_base_url:
+        description: Canonical external ISO download base URL (for example https://download.soltros.dev/releases/44.0.0)
+        required: false
+        default: ""
+        type: string
 
 jobs:
   publish:
@@ -47,8 +52,15 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.release_tag }}
+          DOWNLOAD_BASE_URL: ${{ inputs.download_base_url }}
         run: |
-          mapfile -d '' artifacts < <(find release-download -type f -print0)
+          mapfile -d '' artifacts < <(find release-download -type f ! -name '*.iso' -print0)
+          notes="Universal online installer plus KDE, GNOME, Niri + DMS, and Niri + Noctalia offline LiveISOs. Checksums and signatures are attached here."
+          if [[ -n "${DOWNLOAD_BASE_URL}" ]]; then
+            notes+=$'\n\nISO downloads: '\"${DOWNLOAD_BASE_URL}\"
+          else
+            notes+=$'\n\nISO files are intentionally omitted from GitHub Release assets because GitHub limits each asset to 2 GiB. Publish them to the configured external download host and include its immutable versioned URLs.'
+          fi
           gh release create "${RELEASE_TAG}" "${artifacts[@]}" \
             --title "SoltrOS Reborn ${RELEASE_TAG}" \
-            --notes "Offline LiveISO, checksums, signatures, SPDX SBOMs, provenance, and embedded OCI inventory."
+            --notes "${notes}"

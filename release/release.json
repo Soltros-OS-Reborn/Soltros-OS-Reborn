@@ -33,10 +33,11 @@
     "flavor": "cachyos"
   },
   "user_defaults": {
-    "version": 5
+    "version": 7
   },
   "installer": {
     "live_variant": "kde",
+    "media_profiles": ["online", "kde", "gnome", "niri-dms", "niri-noctalia"],
     "payload_path": "/usr/share/soltros/installer",
     "offline_required": true,
     "online_update_default": false,

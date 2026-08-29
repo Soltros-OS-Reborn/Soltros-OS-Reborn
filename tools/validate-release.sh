@@ -23,6 +23,7 @@ jq -e '
   (.channels.latest == "latest") and
   (.channels.default == .channels.stable) and
   (.installer.offline_required == true) and
+  (.installer.media_profiles == ["online", "kde", "gnome", "niri-dms", "niri-noctalia"]) and
   (.installer.payload_path | startswith("/usr/share/soltros/")) and
   (.installer.online_update_default == false) and
   (.installer.online_update_requires_consent == true)
@@ -44,8 +45,33 @@ jq -e '
   (.actionlint.linux_arm64_sha256 | test("^[0-9a-f]{64}$")) and
   (.starship.x86_64_unknown_linux_gnu_sha256 | test("^[0-9a-f]{64}$")) and
   (.starship.aarch64_unknown_linux_musl_sha256 | test("^[0-9a-f]{64}$")) and
-  (.mbpfan.source_sha256 | test("^[0-9a-f]{64}$")) and
-  (.nix_installer.script_sha256 | test("^[0-9a-f]{64}$")) and
+    (.mbpfan.source_sha256 | test("^[0-9a-f]{64}$")) and
+    (.yazi.version | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")) and
+    (.yazi.license == "MIT") and
+    (.yazi.upstream == "https://github.com/sxyazi/yazi") and
+    (.yazi.x86_64_unknown_linux_gnu_sha256 | test("^[0-9a-f]{64}$")) and
+    (.yazi.aarch64_unknown_linux_gnu_sha256 | test("^[0-9a-f]{64}$")) and
+    (.morewaita.commit | test("^[0-9a-f]{40}$")) and
+    (.morewaita.license == "GPL-3.0-only") and
+    (.morewaita.upstream == "https://github.com/somepaulo/MoreWaita") and
+    (.morewaita.source_sha256 | test("^[0-9a-f]{64}$")) and
+    (.kde_material_you_colors.version == "2.2.0") and
+    (.kde_material_you_colors.license == "GPL-3.0-only") and
+    (.kde_material_you_colors.upstream == "https://github.com/luisbocanegra/kde-material-you-colors") and
+    (.kde_material_you_colors.wheel_sha256 | test("^[0-9a-f]{64}$")) and
+    (.kde_material_you_colors.materialyoucolor_sha256 | test("^[0-9a-f]{64}$")) and
+    (.pywalfox.version == "2.9.0") and
+    (.pywalfox.license == "MPL-2.0") and
+    (.pywalfox.upstream == "https://github.com/Frewacom/pywalfox-native") and
+    (.pywalfox.wheel_sha256 | test("^[0-9a-f]{64}$")) and
+    (.ghostty.version == "1.3.1") and
+    (.ghostty.license == "MIT") and
+    (.ghostty.upstream == "https://github.com/ghostty-org/ghostty") and
+    (.ghostty.source_sha256 | test("^[0-9a-f]{64}$")) and
+    (.ghostty.minisig_sha256 | test("^[0-9a-f]{64}$")) and
+    (.ghostty.zig_x86_64_sha256 | test("^[0-9a-f]{64}$")) and
+    (.ghostty.zig_aarch64_sha256 | test("^[0-9a-f]{64}$")) and
+    (.nix_installer.script_sha256 | test("^[0-9a-f]{64}$")) and
   (.homebrew_installer.commit | test("^[0-9a-f]{40}$")) and
   (.homebrew_installer.script_sha256 | test("^[0-9a-f]{64}$")) and
   (.oh_my_zsh_installer.commit | test("^[0-9a-f]{40}$")) and

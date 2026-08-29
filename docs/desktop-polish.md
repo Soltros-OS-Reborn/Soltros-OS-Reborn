@@ -22,8 +22,9 @@ turning every surface into an accent color.
 - The generated SoltrOS Electric Blue wallpaper is the only new graphic asset.
   It is maintained in this repository as SVG and a generated 1920x1080 PNG.
 - `Papirus-Dark` is selected through the Fedora `papirus-icon-theme` package
-  already layered by the common image. No icon payload is copied from a
-  third-party checkout.
+  already layered by the common image. MoreWaita is also available as an
+  optional, GPL-3.0-only companion theme; it never replaces the deterministic
+  Papirus Dark default.
 - GTK 3 and GTK 4 applications default to dark appearance, the Papirus Dark
   icon set, and the Adwaita 24-pixel cursor.
 - Starship uses a compact, original blue-accent prompt with directory, Git,
@@ -35,6 +36,10 @@ turning every surface into an accent color.
   it through their native configuration surfaces.
 - `btop` receives a shared dark-blue theme with readable data-oriented color
   gradients while keeping the active terminal background visible.
+- Yazi is installed as an explicit terminal file manager with a small original
+  SoltrOS dark-blue theme and no file-association or portal takeover. Existing
+  preview helpers (`file`, ImageMagick, Poppler, 7zip, and
+  `ffmpegthumbnailer`) are reused.
 - Existing user configuration remains authoritative. Versioned user defaults
   copy a new file only when it is absent or unchanged from the previous
   SoltrOS version; modified files are retained beside a `.soltros-new` copy.
@@ -65,6 +70,9 @@ turning every surface into an accent color.
 - A one-shot user service invokes DMS's own `matugen generate` command from
   the SoltrOS wallpaper, selects dark mode and Papirus Dark, then records its
   completion. DMS remains the single owner of generated Material palettes.
+- Fedora's `adw-gtk3-theme` is installed only in this variant. The DMS native
+  settings seed enables GTK theming, keeps Papirus Dark for dark mode, and
+  keeps terminals dark without vendoring generated CSS.
 - Kitty is installed for DMS as an optional terminal and imports DMS-generated
   colors and tab styling. The DMS-specific Alacritty entry point imports the
   same generated palette after the static fallback palette.
@@ -101,4 +109,6 @@ and desktop automation projects. Their ideas informed architecture only. This
 repository does not copy their theme code, wallpaper files, configuration
 payloads, or branding. Fedora distributes Papirus as a package under its own
 license metadata; the image selects that installed package rather than
-redistributing an extracted copy.
+redistributing an extracted copy. Yazi and MoreWaita provenance, licenses,
+attribution, update procedures, and rollback boundaries are recorded in
+`docs/third-party-attribution.md`.

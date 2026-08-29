@@ -55,13 +55,17 @@ generated policy.
 
 ## LiveISO Release
 
-After a successful gated build containing the LiveISO, run **Publish SoltrOS
-Reborn release** with its workflow run ID and the desired release tag. The
-workflow requires a successful source run, downloads its artifacts, verifies all
-checksums, signs and verifies every ISO with a Sigstore bundle, and creates a
-durable GitHub Release containing the ISO, checksum, signature bundle, SPDX SBOM,
-provenance, embedded-image inventory,
+After a successful gated build containing the five LiveISO profiles, publish the
+ISO bytes to the configured immutable external download host, then run
+**Publish SoltrOS Reborn release** with its workflow run ID and the desired
+release tag. Pass the canonical versioned download base URL when available. The
+workflow requires a successful source run, downloads every
+profile artifact, verifies all checksums, signs and verifies every ISO with a
+Sigstore bundle, and creates a durable GitHub Release containing the ISO metadata,
+checksum, signature bundle, SPDX SBOM, provenance, embedded-image inventory,
 release index, and per-image metadata.
+ISO files are excluded from GitHub Release assets because individual assets may
+exceed GitHub's 2 GiB limit; the release notes point users to the external host.
 
 ## Rollback
 

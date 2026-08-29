@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ "${EUID}" -eq 0 ]]; then
+  echo 'soltros-workspace must be run as a regular user' >&2
+  exit 1
+fi
+
+manifest="${SOLTROS_WORKSPACE_MANIFEST:-/usr/share/soltros/workspaces.json}"
+command_name="${1:-list}"
+profile_id="${2:-}"
+
+usage() {
+  printf '%s\n' \
+    'Usage: soltros-workspace list' \
+    '       soltros-workspace create PROFILE' \
+    '       soltros-workspace enter PROFILE' \
+    '       soltros-workspace remove PROFILE'
+}
+
+if ! command -v jq >/dev/null 2>&1 || ! command -v distrobox >/dev/null 2>&1; then
+  echo 'jq and distrobox are required' >&2
+  exit 1
+fi
+[[ -r "${manifest}" ]] || { echo "Workspace manifest is missing: ${manifest}" >&2; exit 1; }
+
+profile_json="$(jq -er --arg id "${profile_id}" '.profiles[] | select(.id == $id)' "${manifest}" 2>/dev/null || true)"
+profile_name="$(jq -er '.name' <<<"${profile_json}" 2>/dev/null || true)"
+profile_image="$(jq -er '.image' <<<"${profile_json}" 2>/dev/null || true)"
+mapfile -t profile_packages < <(jq -r '.packages[]' <<<"${profile_json}" 2>/dev/null || true)
+
+case "${command_name}" in
+  list)
+    jq -r '.profiles[] | "\(.id)\t\(.name)\t\(.image)"' "${manifest}"
+    ;;
+  create)
+    [[ -n "${profile_json}" ]] || { echo "Unknown workspace profile: ${profile_id}" >&2; exit 2; }
+    distrobox create --yes --name "${profile_id}" --image "${profile_image}"
+    case "${profile_id}" in
+      fedora-dev) distrobox enter "${profile_id}" -- sudo dnf5 install -y "${profile_packages[@]}" ;;
+      ubuntu-dev) distrobox enter "${profile_id}" -- sudo apt-get update ; distrobox enter "${profile_id}" -- sudo apt-get install -y "${profile_packages[@]}" ;;
+      arch-dev) distrobox enter "${profile_id}" -- sudo pacman -Syu --noconfirm "${profile_packages[@]}" ;;
+    esac
+    printf 'Created workspace: %s (%s)\n' "${profile_id}" "${profile_name}"
+    ;;
+  enter)
+    [[ -n "${profile_json}" ]] || { echo "Unknown workspace profile: ${profile_id}" >&2; exit 2; }
+    exec distrobox enter "${profile_id}"
+    ;;
+  remove)
+    [[ -n "${profile_json}" ]] || { echo "Unknown workspace profile: ${profile_id}" >&2; exit 2; }
+    exec distrobox rm --force "${profile_id}"
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac

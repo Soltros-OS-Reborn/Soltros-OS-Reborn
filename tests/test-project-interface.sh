@@ -8,7 +8,11 @@ roadmap="${repo_root}/docs/architecture-roadmap.md"
 build_workflow="${repo_root}/.github/workflows/build.yml"
 
 for recipe in test validate build-image build-images build-offline-payload build-liveiso run-liveiso; do
-    just --justfile "${justfile}" --summary | tr ' ' '\n' | grep -Fxq "${recipe}" || {
+    if command -v just >/dev/null 2>&1; then
+      just --justfile "${justfile}" --summary | tr ' ' '\n' | grep -Fxq "${recipe}"
+    else
+      grep -Eq "^${recipe}([[:space:]]|$|:)" "${justfile}"
+    fi || {
         printf 'project task interface is missing recipe: %s\n' "${recipe}" >&2
         exit 1
     }

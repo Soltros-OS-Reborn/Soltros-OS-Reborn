@@ -26,6 +26,7 @@ jq -e '._type == "https://in-toto.io/Statement/v1"' \
 jq -e '.image_count == 4 and .unique_blob_count == 8' \
   "${artifacts}/$(basename "${iso}").inventory.json" >/dev/null
 jq -e '.variants | length == 4' "${artifacts}/release-index.json" >/dev/null
+grep -Fq '"media_profile": "online"' "${artifacts}/release-index.json"
 test -s "${artifacts}/$(basename "${iso}").signature-status"
 
 cat > "${fake_cosign}" <<'EOF'
@@ -64,6 +65,7 @@ chmod 0755 "${fake_cosign}"
 
 COSIGN="${fake_cosign}" COSIGN_LOG="${cosign_log}" \
 COSIGN_PRIVATE_KEY=fixture COSIGN_PASSWORD=fixture \
+LIVEISO_PROFILE=gnome \
 SOLTROS_OFFLINE_PAYLOAD_DIR="${payload}" BUILD_ID=fixture \
   "${repo_root}/tools/generate-release-artifacts.sh" \
     "${iso}" "${signed_artifacts}" >/dev/null
@@ -71,7 +73,7 @@ SOLTROS_OFFLINE_PAYLOAD_DIR="${payload}" BUILD_ID=fixture \
 bundle="${signed_artifacts}/$(basename "${iso}").sigstore.json"
 test -s "${bundle}"
 jq -e --arg bundle "$(basename "${bundle}")" \
-  '.iso.signature == $bundle and (.artifacts | index($bundle)) != null' \
+  '.media_profile == "gnome" and (.variants | length == 1) and .variants[0].id == "gnome" and .iso.signature == $bundle and (.artifacts | index($bundle)) != null' \
   "${signed_artifacts}/release-index.json" >/dev/null
 grep -Fq 'sign-blob --use-signing-config=false --yes --key env://COSIGN_PRIVATE_KEY --bundle' "${cosign_log}"
 grep -Fq 'verify-blob --key' "${cosign_log}"

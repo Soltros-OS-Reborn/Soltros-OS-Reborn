@@ -1,0 +1,28 @@
+[color]
+base = "#14161b"
+surface = "#20242d"
+accent = "#4c9aff"
+accent_support = "#2779d9"
+text = "#dce2eb"
+muted = "#9ca9ba"
+success = "#62be89"
+warning = "#e0b456"
+error = "#ff6b81"
+
+[shape]
+small_radius = 4
+medium_radius = 6
+large_radius = 12
+
+[spacing]
+small = 8
+medium = 12
+large = 18
+
+[typography]
+ui_family = "Adwaita Sans"
+mono_family = "JetBrains Mono"
+mono_size = 11
+
+[motion]
+reduced_motion = false

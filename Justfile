@@ -66,13 +66,13 @@ build-offline-payload output="output/offline-payload" tag=default_tag registry=d
     IMAGE_REGISTRY="{{ registry }}" IMAGE_TAG="{{ tag }}" \
       disk_config/build-offline-payload.sh "{{ output }}"
 
-# Build the desktop-selectable LiveISO from locally available images.
-build-liveiso output="output/liveiso" tag=default_tag registry=default_registry:
-    IMAGE_REGISTRY="{{ registry }}" IMAGE_TAG="{{ tag }}" \
-      disk_config/build-live-iso.sh "{{ output }}"
+# Build one online or desktop-specific LiveISO from locally available images.
+build-liveiso output="output/liveiso" profile="online" tag=default_tag registry=default_registry:
+    IMAGE_REGISTRY="{{ registry }}" IMAGE_TAG="{{ tag }}" LIVEISO_PROFILE="{{ profile }}" \
+      disk_config/build-live-iso.sh "{{ output }}" "{{ profile }}"
 
 # Boot an ISO with KVM/QEMU. Add extra QEMU options through QEMU_EXTRA_ARGS.
-run-liveiso iso="output/liveiso/SoltrOS-dev-live-installer-x86_64.iso" memory="8G" cpus="4":
+run-liveiso iso="output/liveiso/SoltrOS-dev-online-x86_64.iso" memory="8G" cpus="4":
     #!/usr/bin/env bash
     [[ -f "{{ iso }}" ]] || { echo "ISO does not exist: {{ iso }}" >&2; exit 1; }
     read -r -a extra_args <<<"${QEMU_EXTRA_ARGS:-}"

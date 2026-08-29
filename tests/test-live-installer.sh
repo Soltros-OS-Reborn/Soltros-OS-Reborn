@@ -25,6 +25,10 @@ if ! grep -Fq "kernel_source=\"/usr/lib/modules/\${kernel_version}/vmlinuz\"" "$
 fi
 grep -Fq 'for loop_index in {0..7}; do' "${liveiso_builder}"
 grep -Fq 'LIVEISO_ROOTFS_IMAGE' "${liveiso_builder}"
+grep -Fq 'offline_variant="${profile}"' "${liveiso_builder}"
+grep -Fq 'SOLTROS_LIVE_VARIANT' "${liveiso_builder}"
+grep -Fq 'systemctl enable gdm.service' "${prepare_root}"
+grep -Fq 'systemctl enable greetd.service' "${prepare_root}"
 grep -Fq 'Insufficient free space for LiveISO build' "${liveiso_builder}"
 grep -Fq 'sudo ionice -c 2 -n 7 nice -n 10 podman run' "${liveiso_builder}"
 grep -Fq -- '--tmp=/work/tmp' "${liveiso_builder}"

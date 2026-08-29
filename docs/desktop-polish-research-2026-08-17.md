@@ -1,8 +1,8 @@
 # Desktop Polish Research and Approval-Gated Plan
 
 **Research date:** 2026-08-17
-**Status:** Research complete. No candidate in this document has been added to
-the image or enabled for users.
+**Status:** Research complete. Phases 1-3 approved and implemented; graphical
+runtime QA remains tracked separately in the step log.
 
 ## Purpose
 
@@ -120,10 +120,10 @@ local `dnf5` command is not evidence that a package is unavailable in Fedora.
 
 | Candidate | License or status | Finding | Integration value | Decision |
 | --- | --- | --- | --- | --- |
-| [adw-gtk3](https://github.com/lassekongo83/adw-gtk3) | LGPL-2.1, active | A libadwaita-derived GTK3 theme that aligns legacy GTK3 apps with GNOME/libadwaita. Fedora 44 provides `adw-gtk3-theme` version `6.4-3.fc44`. | Directly improves GTK3 consistency and is the official DMS prerequisite for its managed GTK theme path. | Highest-priority candidate, initially for `niri-dms` only. |
+| [adw-gtk3](https://github.com/lassekongo83/adw-gtk3) | LGPL-2.1, active | A libadwaita-derived GTK3 theme that aligns legacy GTK3 apps with GNOME/libadwaita. Fedora 44 provides `adw-gtk3-theme` version `6.4-3.fc44`. | Directly improves GTK3 consistency and is the official DMS prerequisite for its managed GTK theme path. | Implemented in `niri-dms` only; native DMS settings enable GTK theming. |
 | [Blur my Shell](https://github.com/aunetx/blur-my-shell) | GNOME extension; license and Fedora packaging must be verified before shipping | Adds blur to the GNOME top panel, dash, and overview. | Visual impact is high but it changes Shell rendering and can interact with other extensions. | Do not default-enable. It conflicts with the current restrained, high-legibility visual contract and creates GNOME Shell extension maintenance work. |
 | Bar Enhanced and Open Bar search results | Discovery-only; source/license/package status not established in this pass | Alternative top-bar styling and adaptive visual controls. | Could alter panel hierarchy. | Do not select without a clear upstream, license, and GNOME-version compatibility matrix. |
-| [MoreWaita](https://github.com/somepaulo/MoreWaita) | GPL-3.0, active | Expanded Adwaita-style icons for third-party applications and MIME types. | Strong GNOME-adjacent icon improvement without replacing the shell or toolkit. | Recommended as an optional, user-selectable icon theme after packaging and attribution work. Keep Papirus Dark as the default until cross-desktop visual QA is complete. |
+| [MoreWaita](https://github.com/somepaulo/MoreWaita) | GPL-3.0, active | Expanded Adwaita-style icons for third-party applications and MIME types. | Strong GNOME-adjacent icon improvement without replacing the shell or toolkit. | Implemented as an optional locked payload with license and attribution records. Papirus Dark remains the default. |
 | Colloid, Orchis, and other GTK-theme results | Search discovery only | Themed GTK packages and colorizers exist, including Matugen-oriented forks. | They demonstrate demand for GTK3 compatibility layers. | Do not add: direct GTK stylesheet ownership would conflict with DMS generation or GNOME native preferences. |
 
 ### Icon Theme References
@@ -131,7 +131,7 @@ local `dnf5` command is not evidence that a package is unavailable in Fedora.
 | Candidate | License or status | Finding | Decision |
 | --- | --- | --- | --- |
 | [Papirus](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme) | Existing Fedora package; actively maintained upstream | Includes dark/light variants, KDE color-scheme integration, folder color support, tray support, and broad application coverage. | Keep as the default cross-desktop icon theme. |
-| [MoreWaita](https://github.com/somepaulo/MoreWaita) | GPL-3.0, active | Complements Adwaita with third-party application and MIME coverage. | Preferred optional GNOME-adjacent icon addition. Requires source lock, license text, attribution, and packaging plan. |
+| [MoreWaita](https://github.com/somepaulo/MoreWaita) | GPL-3.0, active | Complements Adwaita with third-party application and MIME coverage. | Optional GNOME-adjacent icon addition with source lock, license text, attribution, and packaging records. |
 | [Tela](https://github.com/vinceliuice/Tela-icon-theme) | GPL-3.0, active | Flat icon theme with a blue folder-color variant that matches the SoltrOS accent. | Optional KDE/Niri-oriented alternative. Do not ship as a second default together with MoreWaita. |
 | Paper Icon Theme, Numix Circle, and Luv | Discovery-only | Additional current icon-theme topic candidates. | No selection: Paper is much less current; Numix and Luv do not improve the existing Papirus/MoreWaita decision enough to justify more payload. |
 
@@ -146,7 +146,7 @@ local `dnf5` command is not evidence that a package is unavailable in Fedora.
 | [Pywalfox](https://github.com/Frewacom/pywalfox) | MPL-2.0, active | Dynamic Firefox/Thunderbird colors; DMS generates a Pywalfox-compatible color artifact. | Optional DMS experiment only. SoltrOS distributes Waterfox, so profile discovery, native messaging, add-on policy, and rollback must be proven first. |
 | Material Fox search result | Discovery-only | DMS documentation describes a Firefox profile CSS route. | Not selected because the product browser is Waterfox and the profile-level behavior has not been verified. |
 | [Ghostty](https://github.com/ghostty-org/ghostty) | MIT, active | GPU-accelerated terminal; DMS documents generated Ghostty theme support. | Optional terminal only. Kitty and Alacritty already provide complete defaults, so do not replace them or expand the base image without a user-facing reason. |
-| [Yazi](https://github.com/sxyazi/yazi) | MIT, active | Fast terminal file manager with a theme/plugin system, image preview integration, and optional ripgrep/fd/fzf/zoxide workflow. | Recommended shared optional tool, pending Fedora 44 package verification and a minimal original SoltrOS configuration. |
+| [Yazi](https://github.com/sxyazi/yazi) | MIT, active | Fast terminal file manager with a theme/plugin system, image preview integration, and optional ripgrep/fd/fzf/zoxide workflow. | Implemented as a shared explicit tool with a minimal original SoltrOS configuration; existing preview tools are reused. |
 | Mission Center, nvtop, MangoHud, GOverlay | Existing components | Graphical and terminal monitoring/game overlay capability is already present. | Do not add a duplicate monitoring stack. |
 
 ### Wallpaper and Dynamic-Color Tool References
@@ -171,6 +171,11 @@ local `dnf5` command is not evidence that a package is unavailable in Fedora.
 a competing visual framework. The package is explicitly documented by DMS for
 GTK theming and is confirmed in Fedora 44.
 
+**Implementation result:** Fedora `adw-gtk3-theme` is installed only in the
+`niri-dms` build script. DMS `settings.json` uses its documented
+`gtkThemingEnabled`, `iconThemeDark`, and `terminalsAlwaysDark` keys; generated
+CSS remains DMS-owned and is never committed.
+
 **Expected result:** GTK3 applications in the DMS variant follow the DMS
 generated dark Material palette more consistently while GTK4/libadwaita,
 Kitty, and Alacritty retain their current native paths.
@@ -190,6 +195,11 @@ for verification.
 **Why it is second:** It improves the actual terminal workflow across all
 four variants without replacing a graphical file manager, shell, or portal.
 
+**Implementation result:** Yazi `26.8.15` and `ya` are installed from
+architecture-specific upstream release archives with SHA-256 verification.
+The shared overlay provides original `yazi.toml`, `theme.toml`, and
+`keymap.toml` files; no graphical file-manager or MIME ownership changes.
+
 **Expected result:** A visually coherent, fast terminal file manager that
 works from Konsole, Kitty, and Alacritty. It remains an explicit `yazi`
 command and does not alter file associations or default file choosers.
@@ -206,6 +216,11 @@ third-party configuration should not be copied without a license review.
 desktop shells. MoreWaita improves GNOME-adjacent app and MIME coverage;
 Tela offers blue folders aligned with the SoltrOS accent.
 
+**Implementation result:** MoreWaita is installed from the locked upstream
+commit `5438528502c6ee6473ede1087ed46c3872535f5f`; its GPL-3.0 license,
+README, and AUTHORS are installed with the payload. Native settings can select
+it while Papirus Dark remains the deterministic default.
+
 **Expected result:** Papirus Dark remains the deterministic default. A user
 can choose one additional icon theme through a native desktop setting or a
 future graphical settings page.
@@ -214,26 +229,25 @@ future graphical settings page.
 license text, attribution, update policy, package integrity metadata, and
 cross-desktop visual checks. This is not a package-name-only change.
 
-### Experimental, Not Default
+### Implemented, Opt-In, Not Default
 
 #### 4. KDE Material You Colors
 
-This can be valuable for users who want Plasma colors to follow their chosen
-wallpaper, but it should be a KDE-only opt-in. It must not run globally, must
-not alter the other images, and must include daemon lifecycle and rollback
-coverage. The existing blue Breeze Dark configuration remains the default.
+Implemented in the KDE image as an opt-in user service. It derives a dark
+palette from the bundled SoltrOS wallpaper, backs up KDE files before enabling,
+and restores them on disable. Breeze Dark and Papirus Dark remain the default.
 
 #### 5. Waterfox Dynamic Theme Integration
 
-Pywalfox is a viable DMS source, but only after Waterfox compatibility is
-verified with a disposable profile. The default browser must continue working
-without an add-on, native-messaging host, or profile stylesheet.
+Implemented in the Niri + DMS image as an opt-in native-messaging manifest.
+Waterfox remains unchanged until the user enables it and installs the browser
+extension; no profile stylesheet or extension is bundled.
 
 #### 6. Ghostty
 
-Ghostty can be a well-integrated optional terminal, especially for DMS users,
-but current Kitty and Alacritty coverage means that a third default terminal
-would add image size and support overhead without solving a current gap.
+Implemented in the Niri + DMS image as an opt-in terminal. DMS continues to
+prefer Kitty by default, and the command only changes the current user's
+`terminalOverride` setting.
 
 ### Not Selected
 
@@ -306,17 +320,17 @@ reviewable and can be stopped without changing later phases.
 5. Roll back by removing the optional selection and payload without changing
    the Papirus default.
 
-### Phase 4: Experimental KDE and Browser Work
+### Phase 4: Opt-In KDE, Browser, and Terminal Work
 
-1. Prototype KDE Material You Colors only in an isolated KDE build branch and
-   disposable VM session.
-2. Verify background changes, color scheme generation, Plasma panel/widget
-   behavior, Konsole, Flatpak applications, logout/login, and user rollback.
-3. Prototype Pywalfox only in a disposable Waterfox profile. Verify extension
-   behavior, native host lifecycle, browser startup, uninstall, and profile
-   recovery before it can be offered as opt-in.
-4. Consider Ghostty only after a documented reason to add a third terminal and
-   a Fedora 44 package-source review.
+1. Install KDE Material You Colors only in the KDE image and expose a user-level
+   service behind `soltros-theme kde-material-you enable|disable`.
+2. Install Pywalfox only in the Niri + DMS image and create the Flatpak native
+   messaging manifest only after the user opts in.
+3. Build Ghostty only in the Niri + DMS image, verify its upstream minisign
+   signature, and keep Kitty as the DMS default until explicit enablement.
+4. Keep all generated palettes, browser CSS, and per-user settings outside the
+   repository; record source, license, digest, and rollback behavior here and
+   in `docs/third-party-attribution.md`.
 
 ## Approval Bundles
 

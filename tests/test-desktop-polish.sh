@@ -19,7 +19,7 @@ assert_file() {
 
 grep -Fq 'apply_layer shared' "${overlay_script}"
 grep -Fq 'cp -a /etc/skel/.config/.' "${repo_root}/build_files/install-user-defaults.sh"
-jq -e '.user_defaults.version == 5' "${repo_root}/release/release.json" >/dev/null
+jq -e '.user_defaults.version == 7' "${repo_root}/release/release.json" >/dev/null
 
 overlay_line="$(grep -nF 'echo_group /ctx/apply-desktop-files.sh /ctx/desktop-files' \
   "${repo_root}/build_files/build.sh" | cut -d: -f1)"
@@ -43,6 +43,9 @@ for variant in kde gnome niri-dms niri-noctalia; do
   assert_file "${target_root}/etc/skel/.config/fastfetch/config.jsonc"
   assert_file "${target_root}/etc/skel/.config/btop/btop.conf"
   assert_file "${target_root}/etc/skel/.config/btop/themes/SoltrOS.theme"
+  assert_file "${target_root}/etc/skel/.config/yazi/yazi.toml"
+  assert_file "${target_root}/etc/skel/.config/yazi/theme.toml"
+  assert_file "${target_root}/etc/skel/.config/yazi/keymap.toml"
   grep -Fxq 'gtk-icon-theme-name=Papirus-Dark' \
     "${target_root}/etc/xdg/gtk-3.0/settings.ini"
   grep -Fxq 'gtk-theme-name=Adwaita-dark' \
@@ -51,6 +54,54 @@ done
 
 grep -Fxq 'fastfetch' "${repo_root}/build_files/packages/core.txt"
 grep -Fxq 'jetbrains-mono-fonts-all' "${repo_root}/build_files/packages/core.txt"
+grep -Fxq 'ffmpegthumbnailer' "${repo_root}/build_files/packages/core.txt"
+grep -Fq "yazi-\${YAZI_TARGET}.zip" "${repo_root}/build_files/third-party-tools.sh"
+grep -Fq "MoreWaita-\${MOREWAITA_COMMIT}" "${repo_root}/build_files/third-party-tools.sh"
+grep -Fq 'MoreWaita is selectable' "${repo_root}/docs/third-party-attribution.md"
+assert_file "${repo_root}/system_files/usr/bin/soltros-theme"
+assert_file "${repo_root}/system_files/usr/bin/soltros-noctalia-session"
+assert_file "${repo_root}/system_files/usr/bin/soltros-workspace"
+assert_file "${repo_root}/system_files/usr/libexec/soltros/noctalia-theme-sync"
+assert_file "${repo_root}/system_files/usr/share/soltros/theme/tokens.toml"
+assert_file "${repo_root}/system_files/usr/share/soltros/workspaces.json"
+assert_file "${repo_root}/system_files/usr/lib/systemd/user/soltros-kde-material-you.service"
+test -x "${repo_root}/system_files/usr/bin/soltros-theme"
+test -x "${repo_root}/system_files/usr/bin/soltros-noctalia-session"
+test -x "${repo_root}/system_files/usr/bin/soltros-workspace"
+test -x "${repo_root}/system_files/usr/libexec/soltros/noctalia-theme-sync"
+python3 - "${repo_root}/system_files/usr/share/soltros/theme/tokens.toml" <<'PY'
+import sys
+import tomllib
+from pathlib import Path
+
+tokens = tomllib.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+assert tokens["color"]["base"] == "#14161b"
+assert tokens["color"]["accent"] == "#4c9aff"
+assert tokens["color"]["error"] == "#ff6b81"
+assert tokens["typography"]["mono_family"] == "JetBrains Mono"
+PY
+grep -Fq 'terminalOverride": "kitty"' \
+  "${repo_root}/desktop_files/niri-dms/etc/skel/.config/DankMaterialShell/settings.json"
+for source in kde_material_you_colors pywalfox ghostty; do
+  jq -e --arg source "${source}" \
+    '.[$source].upstream and .[$source].license and (.[$source] | to_entries | any(.key | test("sha256$")))' \
+    "${repo_root}/release/sources.lock.json" >/dev/null
+done
+grep -Fq 'kde-material-you-colors' "${repo_root}/build_files/desktops/kde.sh"
+grep -Fq 'pywalfox' "${repo_root}/build_files/desktops/niri-dms.sh"
+grep -Fq 'ghostty' "${repo_root}/build_files/desktops/niri-dms.sh"
+if rg -n 'kde-material-you-colors' "${repo_root}/build_files/desktops/gnome.sh" \
+    "${repo_root}/build_files/desktops/niri-dms.sh" \
+    "${repo_root}/build_files/desktops/niri-noctalia.sh" >/dev/null; then
+  echo 'KDE Material You Colors must remain scoped to the KDE variant' >&2
+  exit 1
+fi
+if rg -n 'pywalfox|ghostty' "${repo_root}/build_files/desktops/kde.sh" \
+    "${repo_root}/build_files/desktops/gnome.sh" \
+    "${repo_root}/build_files/desktops/niri-noctalia.sh" >/dev/null; then
+  echo 'Pywalfox and Ghostty must remain scoped to the Niri + DMS variant' >&2
+  exit 1
+fi
 grep -Fxq 'palette = "soltros"' \
   "${repo_root}/desktop_files/shared/etc/skel/.config/starship.toml"
 
@@ -97,17 +148,40 @@ noctalia_root="${test_root}/niri-noctalia"
 }
 assert_file "${dms_root}/usr/lib/systemd/user/soltros-dms-palette.service"
 assert_file "${dms_root}/etc/skel/.config/kitty/kitty.conf"
+assert_file "${dms_root}/etc/skel/.config/DankMaterialShell/settings.json"
 grep -Fxq 'include dank-theme.conf' "${dms_root}/etc/skel/.config/kitty/kitty.conf"
+grep -Fq '"gtkThemingEnabled": true' \
+  "${dms_root}/etc/skel/.config/DankMaterialShell/settings.json"
+grep -Fq '"iconThemeDark": "Papirus-Dark"' \
+  "${dms_root}/etc/skel/.config/DankMaterialShell/settings.json"
+grep -Fq '"terminalsAlwaysDark": true' \
+  "${dms_root}/etc/skel/.config/DankMaterialShell/settings.json"
+grep -Fq 'adw-gtk3-theme' "${repo_root}/build_files/desktops/niri-dms.sh"
+grep -Fq 'rpm -q adw-gtk3-theme' "${repo_root}/build_files/desktops/niri-dms.sh"
+if rg -n 'adw-gtk3-theme' "${repo_root}/build_files/desktops/kde.sh" \
+    "${repo_root}/build_files/desktops/gnome.sh" \
+    "${repo_root}/build_files/desktops/niri-noctalia.sh" >/dev/null; then
+  echo 'adw-gtk3-theme must remain scoped to the DMS variant' >&2
+  exit 1
+fi
 grep -Fq 'dank-theme.toml' "${dms_root}/etc/skel/.config/alacritty/alacritty.toml"
 grep -Fxq 'After=dms.service' \
   "${dms_root}/usr/lib/systemd/user/soltros-dms-palette.service"
 grep -Fq 'soltros-dms-palette.service' \
   "${repo_root}/build_files/desktop-defaults.sh"
+grep -Fq 'terminalOverride": "kitty"' \
+  "${dms_root}/etc/skel/.config/DankMaterialShell/settings.json"
 assert_file "${noctalia_root}/etc/skel/.config/noctalia/noctalia-config.toml"
 grep -Fxq 'mode = "dark"' \
   "${noctalia_root}/etc/skel/.config/noctalia/noctalia-config.toml"
 grep -Fxq 'source = "wallpaper"' \
   "${noctalia_root}/etc/skel/.config/noctalia/noctalia-config.toml"
+grep -Fxq 'theme_mode_changed = ["/usr/libexec/soltros/noctalia-theme-sync"]' \
+  "${noctalia_root}/etc/skel/.config/noctalia/noctalia-config.toml"
+grep -Fxq 'include optional=true "soltros-local.kdl"' \
+  "${noctalia_root}/etc/skel/.config/niri/config.kdl"
+grep -Fxq 'spawn-at-startup "soltros-noctalia-session" "--daemon"' \
+  "${noctalia_root}/etc/skel/.config/niri/soltros-shell.kdl"
 
 grep -Fq 'swaybg' "${repo_root}/build_files/desktops/niri-common.sh"
 test -x "${repo_root}/system_files/usr/libexec/soltros/apply-initial-wallpaper"

@@ -1,0 +1,152 @@
+#!/usr/bin/bash
+
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage:
+  soltros-theme help
+  soltros-theme tokens
+  soltros-theme kde-material-you enable|disable
+  soltros-theme waterfox enable|disable
+  soltros-theme ghostty enable|disable
+
+These integrations are user-level and opt-in. They never change another user's
+configuration or the image defaults.
+EOF
+}
+
+if [[ "${EUID}" -eq 0 ]]; then
+  echo "soltros-theme must be run as a regular user" >&2
+  exit 1
+fi
+
+variant="$(cat /usr/lib/soltros/desktop-variant 2>/dev/null || true)"
+home="${HOME:?HOME is required}"
+config_home="${XDG_CONFIG_HOME:-${home}/.config}"
+
+backup_file() {
+  local path="$1"
+  if [[ -e "$path" && ! -e "${path}.soltros-backup" ]]; then
+    cp -a "$path" "${path}.soltros-backup"
+  fi
+}
+
+restore_file() {
+  local path="$1"
+  if [[ -e "${path}.soltros-backup" ]]; then
+    cp -a "${path}.soltros-backup" "$path"
+  fi
+}
+
+kde_material_you() {
+  [[ "$variant" == kde ]] || {
+    echo "KDE Material You Colors is available only in the KDE image." >&2
+    exit 1
+  }
+  local service="soltros-kde-material-you.service"
+  case "${1:?action is required}" in
+    enable)
+      backup_file "${config_home}/kdeglobals"
+      backup_file "${config_home}/konsolerc"
+      systemctl --user daemon-reload
+      systemctl --user enable --now "$service"
+      echo "KDE Material You Colors enabled. The previous KDE files are backed up with .soltros-backup."
+      ;;
+    disable)
+      systemctl --user disable --now "$service" 2>/dev/null || true
+      restore_file "${config_home}/kdeglobals"
+      restore_file "${config_home}/konsolerc"
+      echo "KDE Material You Colors disabled; backed-up KDE files were restored when present."
+      ;;
+    *) usage; exit 2 ;;
+  esac
+}
+
+waterfox() {
+  [[ "$variant" == niri-dms ]] || {
+    echo "Waterfox dynamic theme integration is available only in the Niri + DMS image." >&2
+    exit 1
+  }
+  local native_dir="${home}/.var/app/net.waterfox.waterfox/.waterfox/native-messaging-hosts"
+  local manifest="${native_dir}/pywalfox.json"
+  local override="${home}/.local/share/flatpak/overrides/net.waterfox.waterfox"
+  local override_backup="${override}.soltros-backup"
+  case "${1:?action is required}" in
+    enable)
+      mkdir -p "$native_dir"
+      if [[ -e "$manifest" && ! -e "${manifest}.soltros-backup" ]]; then
+        cp -a "$manifest" "${manifest}.soltros-backup"
+      fi
+      if [[ -e "$override" && ! -e "$override_backup" ]]; then
+        cp -a "$override" "$override_backup"
+      fi
+      cat >"$manifest" <<'EOF'
+{
+  "name": "pywalfox",
+  "description": "SoltrOS Pywalfox native messaging host",
+  "path": "/usr/bin/flatpak-spawn",
+  "type": "stdio",
+  "allowed_extensions": ["pywalfox@frewacom.org"],
+  "args": ["--host", "/usr/bin/pywalfox"]
+}
+EOF
+      if command -v flatpak >/dev/null 2>&1 && flatpak info net.waterfox.waterfox >/dev/null 2>&1; then
+        flatpak override --user --talk-name=org.freedesktop.Flatpak net.waterfox.waterfox
+      fi
+      echo "Pywalfox native messaging is enabled. Install the Pywalfox extension in Waterfox to activate it."
+      ;;
+    disable)
+      rm -f "$manifest"
+      if [[ -e "${manifest}.soltros-backup" ]]; then
+        mv "${manifest}.soltros-backup" "$manifest"
+      fi
+      if [[ -e "$override_backup" ]]; then
+        mv "$override_backup" "$override"
+      elif [[ -e "$override" ]]; then
+        rm -f "$override"
+      fi
+      echo "Pywalfox native messaging is disabled."
+      ;;
+    *) usage; exit 2 ;;
+  esac
+}
+
+ghostty() {
+  [[ "$variant" == niri-dms ]] || {
+    echo "Ghostty integration is available only in the Niri + DMS image." >&2
+    exit 1
+  }
+  command -v ghostty >/dev/null 2>&1 || {
+    echo "Ghostty is not installed in this image." >&2
+    exit 1
+  }
+  local settings="${config_home}/DankMaterialShell/settings.json"
+  case "${1:?action is required}" in
+    enable)
+      backup_file "$settings"
+      jq '.terminalOverride = "ghostty"' "$settings" >"${settings}.soltros-new"
+      mv "${settings}.soltros-new" "$settings"
+      echo "Ghostty is enabled as the DMS terminal."
+      ;;
+    disable)
+      if [[ -e "${settings}.soltros-backup" ]]; then
+        restore_file "$settings"
+      else
+        jq '.terminalOverride = "kitty"' "$settings" >"${settings}.soltros-new"
+        mv "${settings}.soltros-new" "$settings"
+      fi
+      echo "Ghostty integration is disabled; DMS now prefers Kitty."
+      ;;
+    *) usage; exit 2 ;;
+  esac
+}
+
+case "${1:-help}" in
+  help) usage ;;
+  tokens) cat /usr/share/soltros/theme/tokens.toml ;;
+  kde-material-you) kde_material_you "${2:-}" ;;
+  waterfox) waterfox "${2:-}" ;;
+  ghostty) ghostty "${2:-}" ;;
+  *) usage; exit 2 ;;
+esac

@@ -1,0 +1,7 @@
+{
+  "configVersion": 13,
+  "gtkThemingEnabled": true,
+  "iconThemeDark": "Papirus-Dark",
+  "terminalsAlwaysDark": true,
+  "terminalOverride": "kitty"
+}

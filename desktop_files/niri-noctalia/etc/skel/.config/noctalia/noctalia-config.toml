@@ -3,6 +3,9 @@ mode = "dark"
 source = "wallpaper"
 wallpaper_scheme = "m3-content"
 
+[hooks]
+theme_mode_changed = ["/usr/libexec/soltros/noctalia-theme-sync"]
+
 [wallpaper]
 directory = "/usr/share/backgrounds/soltros-reborn"
 fill_mode = "crop"

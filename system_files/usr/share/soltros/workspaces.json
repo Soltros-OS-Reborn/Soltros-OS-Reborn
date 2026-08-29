@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "profiles": [
+    {
+      "id": "fedora-dev",
+      "name": "Fedora development",
+      "image": "fedora:latest",
+      "packages": ["git", "gcc", "gcc-c++", "make", "cmake", "python3"]
+    },
+    {
+      "id": "ubuntu-dev",
+      "name": "Ubuntu development",
+      "image": "ubuntu:latest",
+      "packages": ["build-essential", "git", "curl", "python3"]
+    },
+    {
+      "id": "arch-dev",
+      "name": "Arch development",
+      "image": "archlinux:latest",
+      "packages": ["base-devel", "git", "curl", "python"]
+    }
+  ]
+}

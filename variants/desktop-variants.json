@@ -5,7 +5,7 @@
     "description": "A complete and highly configurable desktop with a familiar workflow.",
     "base_image": "quay.io/fedora/fedora-kinoite",
     "base_tag": "44",
-    "base_digest": "sha256:25bc4f7fe829309dccfaba986ce7907b3286ed32024141bf5bec1e7a0794e53f",
+    "base_digest": "sha256:e75431664e30a0f1dc9b8d311756272bdd6ea17cfd4f30690ec241aa0eff4984",
     "image_name": "soltros-os",
     "session": "plasma",
     "display_manager": "plasmalogin"
@@ -16,7 +16,7 @@
     "description": "A focused desktop with a consistent and streamlined workflow.",
     "base_image": "quay.io/fedora/fedora-silverblue",
     "base_tag": "44",
-    "base_digest": "sha256:22746fba71899a659b975500954b32c9eaf1cb372c421ea89a356784d8453895",
+    "base_digest": "sha256:c8c6b109cc8779b4313d986c9d1562d5de04dd36fa93c4b0392641bda8970888",
     "image_name": "soltros-os-gnome",
     "session": "gnome",
     "display_manager": "gdm"
@@ -27,7 +27,7 @@
     "description": "A scrolling Wayland compositor with the integrated Dank Material Shell.",
     "base_image": "quay.io/fedora/fedora-bootc",
     "base_tag": "44",
-    "base_digest": "sha256:295dd6ecda23780e9babf6a889914762ae118c621819d777c879992884d2b681",
+    "base_digest": "sha256:f51e9dca468f0c9d4b2f534d576818d2c4be8bfe225e1eb887ff10101082ecf3",
     "image_name": "soltros-os-niri-dms",
     "session": "niri",
     "display_manager": "greetd"
@@ -38,7 +38,7 @@
     "description": "A scrolling Wayland compositor with the native Noctalia desktop shell.",
     "base_image": "quay.io/fedora/fedora-bootc",
     "base_tag": "44",
-    "base_digest": "sha256:295dd6ecda23780e9babf6a889914762ae118c621819d777c879992884d2b681",
+    "base_digest": "sha256:f51e9dca468f0c9d4b2f534d576818d2c4be8bfe225e1eb887ff10101082ecf3",
     "image_name": "soltros-os-niri-noctalia",
     "session": "niri",
     "display_manager": "greetd"

@@ -68,3 +68,13 @@ jq -e '
 [[ -f "${test_root}/payload/oci/index.json" ]]
 
 printf 'PASS: four desktop images share one offline OCI content store\n'
+
+BUILD_ID=single-build \
+IMAGE_REGISTRY=registry.example.test/soltros \
+IMAGE_TAG=test \
+OFFLINE_VARIANT=gnome \
+SKOPEO="${fake_skopeo}" \
+  "${repo_root}/disk_config/build-offline-payload.sh" "${test_root}/payload-gnome" >/dev/null
+jq -e '.build_id == "single-build" and .variant_count == 1 and .variants[0].variant == "gnome"' \
+  "${test_root}/payload-gnome/catalog.json" >/dev/null
+printf 'PASS: single-variant offline payloads are filtered by profile\n'

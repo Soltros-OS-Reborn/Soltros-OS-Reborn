@@ -5,6 +5,7 @@ bluez-obexd
 btop
 fish
 fastfetch
+ffmpegthumbnailer
 flatpak
 jq
 jetbrains-mono-fonts-all

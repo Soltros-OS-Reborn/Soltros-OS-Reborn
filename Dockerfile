@@ -4,11 +4,12 @@ ARG DESKTOP_VARIANT=kde
 ARG KERNEL_PACKAGE=kernel-cachyos
 
 FROM ${BASE_REF} AS third-party-tools
-RUN dnf5 -y install gcc make
+ARG DESKTOP_VARIANT
+RUN dnf5 -y install aria2 gcc git gtk-update-icon-cache make minisign unzip
 COPY build_files/third-party-tools.sh /usr/local/bin/third-party-tools.sh
 COPY release/sources.lock.json /usr/local/share/soltros/sources.lock.json
 RUN chmod 0755 /usr/local/bin/third-party-tools.sh && \
-    /usr/local/bin/third-party-tools.sh /out /usr/local/share/soltros/sources.lock.json && \
+    DESKTOP_VARIANT=${DESKTOP_VARIANT} /usr/local/bin/third-party-tools.sh /out /usr/local/share/soltros/sources.lock.json && \
     dnf5 clean all
 
 # Stage 1: context for scripts (not included in final image)

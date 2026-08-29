@@ -1,0 +1,47 @@
+[mgr]
+cwd = { fg = "#9ca9ba" }
+hovered = { fg = "#14161b", bg = "#4c9aff" }
+preview_hovered = { underline = true }
+find_keyword = { fg = "#e0b456", italic = true }
+find_position = { fg = "#ae7eff", bg = "reset", italic = true }
+marker_selected = { fg = "#4c9aff", bg = "#4c9aff" }
+marker_copied = { fg = "#62be89", bg = "#62be89" }
+marker_cut = { fg = "#e65c6c", bg = "#e65c6c" }
+tab_active = { fg = "#14161b", bg = "#4c9aff" }
+tab_inactive = { fg = "#9ca9ba", bg = "#20242d" }
+count_copied = { fg = "#14161b", bg = "#62be89" }
+count_cut = { fg = "#14161b", bg = "#e65c6c" }
+count_selected = { fg = "#14161b", bg = "#4c9aff" }
+border_symbol = "|"
+border_style = { fg = "#3b414d" }
+
+[mode]
+normal_main = { fg = "#14161b", bg = "#4c9aff", bold = true }
+select_main = { fg = "#14161b", bg = "#62be89", bold = true }
+unset_main = { fg = "#14161b", bg = "#e0b456", bold = true }
+
+[status]
+perm_type = { fg = "#4c9aff" }
+perm_read = { fg = "#62be89" }
+perm_write = { fg = "#e0b456" }
+perm_exec = { fg = "#e65c6c" }
+perm_sep = { fg = "#3b414d" }
+progress_label = { fg = "#dce2eb" }
+progress_normal = { fg = "#4c9aff", bg = "#20242d" }
+progress_error = { fg = "#e65c6c", bg = "#20242d" }
+
+[which]
+cols = 3
+mask = { bg = "#14161b" }
+cand = { fg = "#4c9aff" }
+rest = { fg = "#9ca9ba" }
+desc = { fg = "#dce2eb" }
+separator = "  "
+separator_style = { fg = "#3b414d" }
+
+[help]
+on = { fg = "#4c9aff" }
+run = { fg = "#62be89" }
+desc = { fg = "#9ca9ba" }
+hovered = { bg = "#20242d", bold = true }
+footer = { fg = "#9ca9ba", bg = "#20242d" }
